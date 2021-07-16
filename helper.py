@@ -10,38 +10,6 @@ from fastcore.basics import setify
 from fastcore.foundation import L
 CONSTANT = 1e-5
 
-class Labels(object):
-
-    def __init__(self):
-        self.chars = list(
-            string.ascii_lowercase  # + string.digits
-        ) + [" ","_"]
-        # self.chars = ["_"," ", ""] + list(
-        #     string.ascii_lowercase  # + string.digits
-        # )
-        self.index = {c: i for i, c in enumerate(self.chars)}
-    def __len__(self):
-        return len(self.chars)
-
-    def __call__(self, sentence):
-        targets = []
-        for c in sentence.strip().lower():
-            try:
-                t = self.index.get(c,None) # handle for oov
-                if t is not None:
-                    targets.append(t)
-            except:
-                pass
-        return targets
-
-    def space(self):
-        return self.index[' ']
-
-    def blank(self):
-        return self.index['_']
-
-labels = Labels()
-
 class FilterbankFeatures(nn.Module):
     """Featurizer that converts wavs to Mel Spectrograms.
     See AudioToMelSpectrogramPreprocessor for args.
