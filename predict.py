@@ -1,7 +1,6 @@
 import onnx
 import onnxruntime
 import torch
-from torch import tensor
 from helper import read_audio,get_files
 from multiprocessing import Pool
 from pqdm.threads import pqdm
@@ -37,6 +36,7 @@ try:
         return logits,int(ologits[1][0])
 except Exception as e:
     print(e)
+    print("onnx not supported")
 
 def decode(out):
     out2 = ["_"]+list(out)
@@ -54,7 +54,13 @@ def decodes(output):
     return pqdm(output,decode,n_jobs=n_jobs,disable=True)
 
 def inference(model,xs):
-    output,ln = model(xs)
+    if "tensorflow" in str(type(model)):
+        import tensorflow as tf
+        xs = tf.constant(xs)
+        output = model(xs)["output_0"].numpy()
+        output = torch.as_tensor(output)[0]
+    else:
+        output,_ = model(xs)
     log_probs = torch.nn.functional.log_softmax(output,-1) # for entropy later
     entropy = -(log_probs.exp() * log_probs).sum(dim=-1).mean(-1)
     log_probs = log_probs.argmax(-1).type(torch.int)
@@ -64,11 +70,15 @@ def inference(model,xs):
     return text,entropy,timesteps
 
 def inference_lm(model,xs,decoder):
-    output,ln = model(xs)
+    if "tensorflow" in str(type(model)):
+        import tensorflow as tf
+        xs = tf.constant(xs)
+        output = model(xs)["output_0"].numpy()
+        output = torch.as_tensor(output)[0]
+    else:
+        output,_ = model(xs)
     if output.ndim == 3:
         output = output[0]
-        ln = ln[0]
-    output = output[:ln]
     probs = torch.nn.functional.softmax(output,-1)
     out = decoder.decode_beams(to_numpy(probs),prune_history=True)
     text, lm_state, timesteps, logit_score, lm_score = out[0]
@@ -90,8 +100,14 @@ def predict(model,fn,decoder=None):
         [type]: [description]
     """
     if isinstance(model,str):
-        model = onnx.load(model)
-        model = onnxruntime.InferenceSession(model.SerializeToString())
+        import multiprocessing
+        sess_options = onnxruntime.SessionOptions()
+        sess_options = onnxruntime.SessionOptions()
+        # Set graph optimization level to ORT_ENABLE_EXTENDED to enable bert optimization.
+        sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+        # Use OpenMP optimizations. Only useful for CPU, has little impact for GPUs.
+        sess_options.intra_op_num_threads = multiprocessing.cpu_count()
+        model = onnxruntime.InferenceSession(model,sess_options)
     if isinstance(fn,str):
         fn = [fn]
     if Path(fn[0]).is_file():
