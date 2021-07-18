@@ -133,8 +133,9 @@ def load_model(path):
         # download weight
         url = download_map[path]
         model_path = Path("~/.sk/models").mkdir(exist_ok=True)
-        
+
     path = Path(path)
+    print("loading model")
     if path.is_dir():
         import tensorflow as tf
         tf_model = tf.saved_model.load(str(path))
@@ -155,6 +156,7 @@ def load_model(path):
     return model
 
 def load_decoder(path):
+    print("loading language model")
     from pyctcdecode import build_ctcdecoder
     import kenlm
     kenlm_model = kenlm.Model(path)
@@ -181,16 +183,7 @@ def predict(model,fn,decoder=None,output_folder=None):
         [type]: [description]
     """
     if isinstance(model,str):
-        # model = load_model(model)
-        import multiprocessing
-        sess_options = onnxruntime.SessionOptions()
-        sess_options = onnxruntime.SessionOptions()
-        # Set graph optimization level to ORT_ENABLE_EXTENDED to enable bert optimization.
-        sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
-        # Use OpenMP optimizations. Only useful for CPU, has little impact for GPUs.
-        sess_options.intra_op_num_threads = multiprocessing.cpu_count()
-        model = onnxruntime.InferenceSession(model,sess_options)
-
+        model = load_model(model)
     if isinstance(decoder,str):
         decoder = load_decoder(decoder)
 
@@ -200,6 +193,7 @@ def predict(model,fn,decoder=None,output_folder=None):
     if Path(fn[0]).is_file():
         preds = []
         ents = []
+        print("start prediction")
         for i in tqdm(fn):
             data,_ = read_audio(str(i))
             xs = torch.as_tensor(data)[None]
@@ -215,6 +209,7 @@ def predict(model,fn,decoder=None,output_folder=None):
             files.extend(get_files(i,[".wav"],recurse=True))
         preds = []
         ents = []
+        print("start prediction")
         for i in tqdm(files,total=len(files)):
             data,_ = read_audio(str(i))
             xs = torch.as_tensor(data)[None]
