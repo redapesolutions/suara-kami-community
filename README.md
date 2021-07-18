@@ -23,14 +23,14 @@ Tutorial for:
 
 CER and WER calculated using Jiwer
 
-| name               | loss  | cer | wer  | entropy | knowledge entropy | Size | Link | Summary                                                                  |
-| ------------------ | ----- | --- | ---- | ------- | ----------------- | ---- | ---- | ------------------------------------------------------------------------ |
-| Conformer tiny     | ctc   | WIP | WIP  | WIP     | WIP               |      |      |                                                                          |
-| Conformer small    | w-ctc | 6.1 | 23.9 | 0.6     | TODO              | 50MB |      | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer small-lm | w-ctc | 0.4 | 14   | -       | -                 | 50MB |      | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer small    | rnnt  | WIP | WIP  | WIP     | WIP               |      |      |                                                                          |
+| name               | loss  | cer | wer  | entropy |  Size | Link | Summary                                                                  |
+| ------------------ | ----- | --- | ---- | ------- |  ---- | ---- | ------------------------------------------------------------------------ |
+| Conformer tiny     | ctc   | 11  | 40   | 0.8     |  10MB |      | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
+| Conformer small    | w-ctc | 6.1 | 23.9 | 0.6     |  50MB |      | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
+| Conformer small-lm | w-ctc | 0.3 | 14   | -       |  50MB |      | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
+| Conformer small    | rnnt  | TODO| TODO | TODO    |       |      |                                                                          |
 
-* All model trained on Google Colab with limited number of dataset because of Google Colab storage space.
+* All model trained on Google Colab with limited number of dataset because of Google Colab storage space limitation
 
 1. Inference
 
