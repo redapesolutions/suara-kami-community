@@ -1,15 +1,20 @@
-import onnx
+#! /usr/bin/env python
 import onnxruntime
 import torch
-from helper import read_audio,get_files
-from multiprocessing import Pool
 from pqdm.threads import pqdm
 from pathlib import Path
 import numpy as np
-from fastcore.basics import patch
+from fastcore.basics import patch,setify
+from fastcore.foundation import L
 from pdb import set_trace
 from tqdm import tqdm
 import string
+
+import soundfile as sf
+import librosa
+import os
+from pathlib import Path
+import numpy as np
 
 labels =  list(
     string.ascii_lowercase  # + string.digits
@@ -17,11 +22,40 @@ labels =  list(
 
 blank = labels.index("_")
 
-def get_seq_len(seq_len):
-    # Assuming that center is True is stft_pad_amount = 0
-    pad_amount = 512 // 2 * 2
-    seq_len = torch.floor((seq_len + pad_amount - 512) / 160) + 1
-    return seq_len.to(dtype=torch.long)
+def read_audio(fn):
+    with sf.SoundFile(fn, 'r') as f:
+        sample_rate = f.samplerate
+        samples = f.read(dtype="float32").transpose()
+        if 16000 != sample_rate:
+            samples = librosa.core.resample(samples, sample_rate, 16000)
+            sample_rate = 16000
+        if samples.ndim > 2:
+            samples = np.mean(samples,1)
+    return samples,sample_rate
+
+def _get_files(p, fs, extensions=None):
+    p = Path(p)
+    res = [p/f for f in fs if not f.startswith('.')
+           and ((not extensions) or f'.{f.split(".")[-1].lower()}' in extensions)]
+    return res
+
+def get_files(path, extensions=None, recurse=True, folders=None, followlinks=True):
+    "Get all the files in `path` with optional `extensions`, optionally with `recurse`, only in `folders`, if specified."
+    path = Path(path)
+    folders=L(folders)
+    extensions = setify(extensions)
+    extensions = {e.lower() for e in extensions}
+    if recurse:
+        res = []
+        for i,(p,d,f) in enumerate(os.walk(path, followlinks=followlinks)): # returns (dirpath, dirnames, filenames)
+            if len(folders) !=0 and i==0: d[:] = [o for o in d if o in folders]
+            else:                         d[:] = [o for o in d if not o.startswith('.')]
+            if len(folders) !=0 and i==0 and '.' not in folders: continue
+            res += _get_files(p, f, extensions)
+    else:
+        f = [o.name for o in os.scandir(path) if o.is_file()]
+        res = _get_files(path, f, extensions)
+    return L(res)
 
 try:
     import onnxruntime
@@ -34,6 +68,7 @@ try:
         alogits = np.asarray(ologits[0])
         logits = torch.from_numpy(alogits[0])
         return logits,int(ologits[1][0])
+
 except Exception as e:
     print(e)
     print("onnx not supported")
@@ -88,7 +123,13 @@ def inference_lm(model,xs,decoder):
     entropy = [entropy[i[0]:i[1]].sum().item() for i in time]
     return text,entropy,timesteps
 
-def predict(model,fn,decoder=None):
+def load_model(path):
+    return path
+
+def load_decoder(path):
+    return path
+
+def predict(model,fn,decoder=None,output_folder=None):
     """Predicting speech to text
 
     Args:
@@ -100,6 +141,7 @@ def predict(model,fn,decoder=None):
         [type]: [description]
     """
     if isinstance(model,str):
+        # model = load_model(model)
         import multiprocessing
         sess_options = onnxruntime.SessionOptions()
         sess_options = onnxruntime.SessionOptions()
@@ -108,8 +150,13 @@ def predict(model,fn,decoder=None):
         # Use OpenMP optimizations. Only useful for CPU, has little impact for GPUs.
         sess_options.intra_op_num_threads = multiprocessing.cpu_count()
         model = onnxruntime.InferenceSession(model,sess_options)
+
+    if isinstance(decoder,str):
+        decoder = load_decoder(decoder)
+
     if isinstance(fn,str):
         fn = [fn]
+        
     if Path(fn[0]).is_file():
         preds = []
         ents = []
@@ -122,11 +169,11 @@ def predict(model,fn,decoder=None):
                 text,entropy,timesteps = inference(model,xs)
             preds.append(text)
             ents.append(entropy)
-        return preds,fn,ents,timesteps
     else:
         files = []
         for i in fn:
             files.extend(get_files(i,[".wav"],recurse=True))
+        print(files)
         preds = []
         ents = []
         for i in tqdm(files,total=len(files)):
@@ -138,9 +185,21 @@ def predict(model,fn,decoder=None):
                 text,entropy,timesteps = inference(model,xs)
             preds.append(text)
             ents.append(entropy)
-        return preds,files,ents,timesteps
+        fn = files
+
+    if output_folder:
+        output = Path(output_folder)
+        output.mkdir(exist_ok=True)
+        for p,pred in zip(fn,preds):
+            p = Path(p)
+            with open(output/f"{p.name}_sk.txt","w+") as f:
+                f.write(pred)
+
+        return "done"
+
+    return preds,fn,ents,timesteps
+    
 
 if __name__ == "__main__":
     import fire
     fire.Fire(predict)
-    # text = predict()

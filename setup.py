@@ -1,13 +1,20 @@
 from setuptools import setup, Extension
 from setuptools import find_packages
+from os import listdir
+
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
 
 with open("README.md") as f:
     long_description = f.read()
+
+scripts = ["scripts/"+i for i in listdir("scripts")]
 
 if __name__ == "__main__":
     setup(
         name="suara-kami-community",
         version="0.1",
+        scripts=scripts,
         description="Bahasa Malaysia Speech to Text",
         long_description=long_description,
         long_description_content_type="text/markdown",
@@ -18,4 +25,5 @@ if __name__ == "__main__":
         packages=find_packages(),
         platforms=["linux", "unix"],
         python_requires=">3.6",
+        install_requires=required
     )

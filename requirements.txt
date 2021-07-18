@@ -1,3 +1,4 @@
 fastcore
-onnx
 onnxruntime
+pqdm
+fire
