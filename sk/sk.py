@@ -9,6 +9,7 @@ from fastcore.foundation import L
 from pdb import set_trace
 from tqdm import tqdm
 import string
+import multiprocessing
 
 import soundfile as sf
 import librosa
@@ -124,10 +125,49 @@ def inference_lm(model,xs,decoder):
     return text,entropy,timesteps
 
 def load_model(path):
-    return path
+    download_map = {
+        "conformer_small": "",
+        "conformer_tiny": "",
+    }
+    if path in download_map:
+        # download weight
+        url = download_map[path]
+        model_path = Path("~/.sk/models").mkdir(exist_ok=True)
+        
+    path = Path(path)
+    if path.is_dir():
+        import tensorflow as tf
+        tf_model = tf.saved_model.load(str(path))
+        model = tf_model.signatures["serving_default"]
+    elif path.suffix == ".onnx":
+        sess_options = onnxruntime.SessionOptions()
+        # Set graph optimization level to ORT_ENABLE_EXTENDED to enable bert optimization.
+        sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+        # Use OpenMP optimizations. Only useful for CPU, has little impact for GPUs.
+        sess_options.intra_op_num_threads = multiprocessing.cpu_count()
+        model = onnxruntime.InferenceSession(str(path),sess_options)
+    elif path.suffix == ".pth":
+        model = torch.load(str(path))
+        model = model.eval()
+    else:
+        print("model type not recognized")
+        return path
+    return model
 
 def load_decoder(path):
-    return path
+    from pyctcdecode import build_ctcdecoder
+    import kenlm
+    kenlm_model = kenlm.Model(path)
+
+    decoder = build_ctcdecoder(
+        labels,
+        kenlm_model, 
+        alpha=0.5,
+        beta=1.0, 
+        ctc_token_idx=labels.index("_")
+    )
+
+    return decoder
 
 def predict(model,fn,decoder=None,output_folder=None):
     """Predicting speech to text
@@ -173,7 +213,6 @@ def predict(model,fn,decoder=None,output_folder=None):
         files = []
         for i in fn:
             files.extend(get_files(i,[".wav"],recurse=True))
-        print(files)
         preds = []
         ents = []
         for i in tqdm(files,total=len(files)):
@@ -187,11 +226,12 @@ def predict(model,fn,decoder=None,output_folder=None):
             ents.append(entropy)
         fn = files
 
+    fn = [Path(i) for i in fn]
+
     if output_folder:
         output = Path(output_folder)
         output.mkdir(exist_ok=True)
         for p,pred in zip(fn,preds):
-            p = Path(p)
             with open(output/f"{p.name}_sk.txt","w+") as f:
                 f.write(pred)
 

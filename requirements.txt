@@ -1,4 +1,6 @@
 fastcore
-onnxruntime
+onnxruntime==1.8.1
 pqdm
 fire
+pyctcdecode
+pypi-kenlm
