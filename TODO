@@ -1,0 +1,10 @@
+TODO
+Tutorial for:
+[/] Speech To Text
+[] Text To Speech
+[] Speech Enhancement -> Remove noise
+[] Speaker Conversion -> Change speaker voice 
+[] Speech Translation -> Change speech from source lang to target lang
+[] Sentiment Analysis -> Extraction sentiment based on the speech
+[] Topic Modeling     -> Extract topic from discussion
+[] Voice Activity Detection -> Detect speech activity at certain frame

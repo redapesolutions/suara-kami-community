@@ -6,20 +6,33 @@ A simple pipeline for doing speech processing
 Works for GPU and CPU
 Small and fast
 
-TODO
-Tutorial for:
-[/] Speech To Text
-[] Text To Speech
-[] Speech Enhancement -> Remove noise
-[] Speaker Conversion -> Change speaker voice 
-[] Speech Translation -> Change speech from source lang to target lang
-[] Sentiment Analysis -> Extraction sentiment based on the speech
-[] Topic Modeling     -> Extract topic from discussion
-[] Voice Activity Detection -> Detect speech activity at certain frame
-
 1. Setup
 
-1.1 Download model
+```
+pip install https://github.com/redapesolutions/suara-kami-community
+or
+git clone https://github.com/redapesolutions/suara-kami-community
+cd suara-kami-community
+pip install . --upgrade
+```
+
+2. Usage
+
+Inference to a folder
+run code that point to a folder containing wav file
+```
+sk conformer_small audio_folder_path
+or
+sk conformer_small audio_folder_path --output_folder output
+or
+sk conformer_small audio_folder_path --output_folder output --output_csv results.csv
+```
+
+Inference to one file
+run code that point to a wav file
+```
+sk conformer_small audio_path.wav
+```
 
 CER and WER calculated using Jiwer
 
@@ -32,26 +45,26 @@ CER and WER calculated using Jiwer
 
 * All model trained on Google Colab with limited number of dataset because of Google Colab storage space limitation
 
-1. Inference
+3. Issue
 
-Inference to a folder
-'''
-run code that point to a folder
-python3 predict.py --path /content/test
-'''
+    3.1. The model not able to recognize my name/company/brand
+    - The reason why the model not able to recognize because it is not in the training dataset, you can create kenlm language model to make the model recognize it correctly or use Hotword with custom weight to correctly recognize it. See tutorials/2. speech to text with language model.ipynb
 
-Inference to one file
-'''
-run code that point to a wav file
-python3 predict.py --path /content/test/youtube/0.wav
-'''
+    3.2. The model not able to recognize common word.
+    - The reason might be the word not in the training set, you can make the model predict correctly by following above suggestion or create an issue with the audio and text(or text only) so that we can make it work and add as our evaluation dataset.
 
-2. Issue
+    3.3. Need feature X
+    - Can create issue and we will consider add it in the next version.
 
-1. The model not able to recognize my name/company/brand
-- The reason why the model not able to recognize because it is not in the training dataset, you can create kenlm language model to make the model recognize it correctly or use Hotword with custom weight to correctly recognize it.
+    3.4. Want to contribute (Data,Compute power,Annotation,Features)
+    - Can contact us at khursani@omesti.com
+     
+References:
 
-2. The model not able to recognize common word.
-- The reason might be the word not in the training set, you can make the model predict correctly by following above suggestion or create an issue with the audio and text(or text only) so that we can make it work and add as our evaluation dataset.
+1. ONNX optimization based on https://mp.weixin.qq.com/s/ZLZ4F2E_wYEMODGWzdhDRg
+2. 
 
-3. 
+Related:
+
+1. https://github.com/huseinzol05/Malaya-Speech
+2. https://github.com/bagustris/id

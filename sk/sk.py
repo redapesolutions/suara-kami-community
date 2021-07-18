@@ -16,6 +16,7 @@ import librosa
 import os
 from pathlib import Path
 import numpy as np
+import requests
 
 labels =  list(
     string.ascii_lowercase  # + string.digits
@@ -126,13 +127,22 @@ def inference_lm(model,xs,decoder):
 
 def load_model(path):
     download_map = {
-        "conformer_small": "",
-        "conformer_tiny": "",
+        "conformer_small": "https://f001.backblazeb2.com/file/suarakami/conformer_small.onnx",
+        "conformer_tiny": "https://f001.backblazeb2.com/file/suarakami/conformer_tiny.onnx",
     }
     if path in download_map:
         # download weight
         url = download_map[path]
-        model_path = Path("~/.sk/models").mkdir(exist_ok=True)
+        filename = os.path.basename(url)
+        dl_path = os.path.join(Path.home(), ".sk/models")
+        os.makedirs(dl_path, exist_ok=True)
+        abs_path = os.path.join(dl_path, filename)
+        if not Path(abs_path).is_file():
+            chunk_size = 1024
+            with requests.get(url, stream=True) as r, open(abs_path, "wb") as f:
+                for chunk in tqdm(r.iter_content(chunk_size=chunk_size),total=int(int(r.headers["Content-Length"])/chunk_size)):
+                    f.write(chunk)
+        path = abs_path
 
     path = Path(path)
     print("loading model")
@@ -171,7 +181,7 @@ def load_decoder(path):
 
     return decoder
 
-def predict(model,fn,decoder=None,output_folder=None):
+def predict(model,fn,decoder=None,output_folder=None,output_csv=None):
     """Predicting speech to text
 
     Args:
@@ -226,14 +236,23 @@ def predict(model,fn,decoder=None,output_folder=None):
     if output_folder:
         output = Path(output_folder)
         output.mkdir(exist_ok=True)
+        print("saving prediction to:",str(output))
         for p,pred in zip(fn,preds):
             with open(output/f"{p.name}_sk.txt","w+") as f:
                 f.write(pred)
 
+    if output_csv:
+        import pandas as pd
+        df = pd.DataFrame([fn,preds,ents,timesteps])
+        df.columns = ["filename","prediction","entropy","timesteps"]
+        if ".csv" not in output_csv:
+            output_csv += ".csv"
+        df.to_csv(output_csv)
+        print("write csv to:",output_csv)
+    if output_folder or output_csv:
         return "done"
 
     return preds,fn,ents,timesteps
-    
 
 if __name__ == "__main__":
     import fire
