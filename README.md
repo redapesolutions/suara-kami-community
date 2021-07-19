@@ -45,6 +45,13 @@ sk conformer_small audio_path.wav
 sk conformer_small audio_path.wav,audio_path2.wav
 ```
 
+GPU Usage
+
+```
+pip uninstall onnxruntime
+pip install onnxruntime-gpu
+```
+
 CER and WER calculated using Jiwer
 
 | name               | loss  | cer | wer  | entropy |  Size  | Summary                                                                  |
