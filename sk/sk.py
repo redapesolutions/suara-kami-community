@@ -198,7 +198,7 @@ def predict(model,fn,decoder=None,output_folder=None,output_csv=None):
         decoder = load_decoder(decoder)
 
     if isinstance(fn,str):
-        fn = [fn]
+        fn = fn.split(",")
         
     if Path(fn[0]).is_file():
         preds = []

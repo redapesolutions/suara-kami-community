@@ -18,7 +18,15 @@ pip install . --upgrade
 
 2. Usage
 
-Inference to a folder
+```
+Usage: sk MODEL FN <flags>
+  optional flags:        --decoder | --output_folder | --output_csv
+
+For detailed information on this command, run:
+  sk --help
+```
+
+Inference to one folder or multiple folders
 run code that point to a folder containing wav file
 ```
 sk conformer_small audio_folder_path
@@ -26,22 +34,25 @@ or
 sk conformer_small audio_folder_path --output_folder output
 or
 sk conformer_small audio_folder_path --output_folder output --output_csv results.csv
+or 
+sk conformer_small audio_folder_path,audio_folder_path2
 ```
 
-Inference to one file
+Inference to one or multiple files
 run code that point to a wav file
 ```
 sk conformer_small audio_path.wav
+sk conformer_small audio_path.wav,audio_path2.wav
 ```
 
 CER and WER calculated using Jiwer
 
-| name               | loss  | cer | wer  | entropy |  Size | Link | Summary                                                                  |
-| ------------------ | ----- | --- | ---- | ------- |  ---- | ---- | ------------------------------------------------------------------------ |
-| Conformer tiny     | ctc   | 11  | 40   | 0.8     |  10MB |      | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer small    | w-ctc | 6.1 | 23.9 | 0.6     |  50MB |      | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer small-lm | w-ctc | 0.3 | 14   | -       |  50MB |      | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer small    | rnnt  | TODO| TODO | TODO    |       |      |                                                                          |
+| name               | loss  | cer | wer  | entropy |  Size  | Summary                                                                  |
+| ------------------ | ----- | --- | ---- | ------- |  ----  | ------------------------------------------------------------------------ |
+| Conformer tiny     | ctc   | 11  | 40   | 0.5     |  18MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
+| Conformer small    | w-ctc | 6.1 | 23.9 | 0.6     |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
+| Conformer small-lm | w-ctc | 0.3 | 14   | -       |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
+| Conformer small    | rnnt  | TODO| TODO | TODO    |        |                                                                          |
 
 * All model trained on Google Colab with limited number of dataset because of Google Colab storage space limitation
 
@@ -62,7 +73,8 @@ CER and WER calculated using Jiwer
 References:
 
 1. ONNX optimization based on https://mp.weixin.qq.com/s/ZLZ4F2E_wYEMODGWzdhDRg
-2. 
+2. https://github.com/NVIDIA/NeMo
+3. https://github.com/alphacep/vosk-server/
 
 Related:
 
