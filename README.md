@@ -42,6 +42,7 @@ Inference to one or multiple files
 run code that point to a wav file
 ```
 sk conformer_small audio_path.wav
+or
 sk conformer_small audio_path.wav,audio_path2.wav
 ```
 
@@ -52,11 +53,15 @@ pip uninstall onnxruntime
 pip install onnxruntime-gpu
 ```
 
+GRPC Server/Client
+TODO
+
 CER and WER calculated using Jiwer
 
 | name               | loss  | cer | wer  | entropy |  Size  | Summary                                                                  |
 | ------------------ | ----- | --- | ---- | ------- |  ----  | ------------------------------------------------------------------------ |
 | Conformer tiny     | ctc   | 11  | 40   | 0.5     |  18MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
+| Conformer tiny-lm     | ctc   | TODO  | TODO   | TODO     |  18MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
 | Conformer small    | w-ctc | 6.1 | 23.9 | 0.6     |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
 | Conformer small-lm | w-ctc | 0.3 | 14   | -       |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
 | Conformer small    | rnnt  | TODO| TODO | TODO    |        |                                                                          |
