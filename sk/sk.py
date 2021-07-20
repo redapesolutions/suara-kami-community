@@ -14,7 +14,7 @@ import multiprocessing
 import soundfile as sf
 import librosa
 import os
-from pathlib import Path
+from pathlib import Path,PosixPath
 import numpy as np
 import requests
 
@@ -23,6 +23,11 @@ labels =  list(
 ) + [" ","_"]
 
 blank = labels.index("_")
+
+def process_text(a):
+    return a.replace(".","").replace(",",'').replace("?","").replace("!","")\
+                .replace('-'," ").replace('"',"").replace("'",'').replace('–'," ")\
+                .replace("\\"," ").replace("/"," ").replace("*","").replace("&","dan").lower()
 
 def read_audio(fn):
     with sf.SoundFile(fn, 'r') as f:
@@ -139,6 +144,7 @@ def load_model(path):
         abs_path = os.path.join(dl_path, filename)
         if not Path(abs_path).is_file():
             chunk_size = 1024
+            print("downloading:",filename)
             with requests.get(url, stream=True) as r, open(abs_path, "wb") as f:
                 for chunk in tqdm(r.iter_content(chunk_size=chunk_size),total=int(int(r.headers["Content-Length"])/chunk_size)):
                     f.write(chunk)
@@ -181,7 +187,7 @@ def load_decoder(path):
 
     return decoder
 
-def predict(model,fn,decoder=None,output_folder=None,output_csv=None):
+def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None):
     """Predicting speech to text
 
     Args:
@@ -192,46 +198,47 @@ def predict(model,fn,decoder=None,output_folder=None,output_csv=None):
     Returns:
         [type]: [description]
     """
+    if model is None: # if model not defined,use default model
+        model = "conformer_small"
     if isinstance(model,str):
         model = load_model(model)
     if isinstance(decoder,str):
         decoder = load_decoder(decoder)
 
-    if isinstance(fn,str):
-        fn = fn.split(",")
-        
-    if Path(fn[0]).is_file():
-        preds = []
-        ents = []
-        print("start prediction")
-        for i in tqdm(fn):
-            data,_ = read_audio(str(i))
-            xs = torch.as_tensor(data)[None]
-            if decoder:
-                text,entropy,timesteps = inference_lm(model,xs,decoder)
-            else:
-                text,entropy,timesteps = inference(model,xs)
-            preds.append(text)
-            ents.append(entropy)
-    else:
-        files = []
-        for i in fn:
-            files.extend(get_files(i,[".wav"],recurse=True))
-        preds = []
-        ents = []
-        print("start prediction")
-        for i in tqdm(files,total=len(files)):
-            data,_ = read_audio(str(i))
-            xs = torch.as_tensor(data)[None]
-            if decoder:
-                text,entropy,timesteps = inference_lm(model,xs,decoder)
-            else:
-                text,entropy,timesteps = inference(model,xs)
-            preds.append(text)
-            ents.append(entropy)
-        fn = files
+    if isinstance(fn,PosixPath):
+        fn = str(fn)
 
-    fn = [Path(i) for i in fn]
+    if isinstance(fn,str):
+        fn = fn.split(",") # string to list, might break for filename with comma
+    
+    files = []
+    print("Total input path:",len(fn))
+    for i in fn:
+        files.extend([i] if Path(i).is_file() else get_files(i,[".wav"],recurse=True))
+    print("Total audio found:",len(files))
+
+    preds = []
+    ents = []
+    timesteps = []
+    processed_files = []
+    print("start prediction")
+    for i in tqdm(files,total=len(files)):
+        try:
+            data,_ = read_audio(str(i))
+        except Exception as e:
+            print(f"failed,",e)
+            continue
+        xs = torch.as_tensor(data)[None]
+        if decoder:
+            text,entropy,tt = inference_lm(model,xs,decoder)
+        else:
+            text,entropy,tt = inference(model,xs)
+        preds.append(text)
+        ents.append(entropy)
+        timesteps.append(tt)
+        processed_files.append(i)
+
+    fn = [Path(i) for i in processed_files]
 
     if output_folder:
         output = Path(output_folder)
