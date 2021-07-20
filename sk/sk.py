@@ -131,12 +131,12 @@ def inference_lm(model,xs,decoder):
 
 def load_model(path):
     download_map = {
-        "conformer_small": "https://f001.backblazeb2.com/file/suarakami/conformer_small.onnx",
-        "conformer_tiny": "https://f001.backblazeb2.com/file/suarakami/conformer_tiny.onnx",
+        "conformer_small": ["https://zenodo.org/record/5115792/files/conformer_small.onnx?download=1","https://f001.backblazeb2.com/file/suarakami/conformer_small.onnx"],
+        "conformer_tiny": ["https://f001.backblazeb2.com/file/suarakami/conformer_tiny.onnx"],
     }
     if path in download_map:
         # download weight
-        url = download_map[path]
+        url = download_map[path][0]
         filename = os.path.basename(url)
         dl_path = os.path.join(Path.home(), ".sk/models")
         os.makedirs(dl_path, exist_ok=True)
