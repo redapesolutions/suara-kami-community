@@ -86,6 +86,14 @@ CER and WER calculated using Jiwer
 
 Conformer_small: https://zenodo.org/record/5115792 - onnx + tf saved model
 
+3. Tutorials
+
+- [Simple Speech to Text](./tutorials/1.speech_to_text.ipynb)
+- [Speech to Text w/ Language model](./tutorials/2.speech_to_text_with_language_model.ipynb)
+- [Convert Speech text to Written text form](./tutorials/3.normalize_text.ipynb)
+- [Simple Speech to Text using tf saved model](./tutorials/4.tensorflow_inference.ipynb)
+- [Prepare Language Model](https://github.com/huseinzol05/malaya-speech/blob/b44d08a225ce9ea6881527cd66018453feb1ace4/pretrained-model/stt/prepare-lm/README.md#L10)
+
 3. Issue
 
     3.1. The model not able to recognize my name/company/brand
@@ -95,7 +103,7 @@ Conformer_small: https://zenodo.org/record/5115792 - onnx + tf saved model
     - The reason might be the word not in the training set, you can make the model predict correctly by following above suggestion or create an issue with the audio and text(or text only) so that we can make it work and add as our evaluation dataset.
 
     3.3. Need feature X
-    - Can create issue and we will consider add it in the next version.
+    - Can create issue and we will consider to add it in the next version.
 
     3.4. Want to contribute (Data,Compute power,Annotation,Features)
     - Can contact us at khursani@omesti.com
