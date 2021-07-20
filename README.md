@@ -68,6 +68,8 @@ CER and WER calculated using Jiwer
 
 * All model trained on Google Colab with limited number of dataset because of Google Colab storage space limitation
 
+Conformer_small: https://zenodo.org/record/5115792 - onnx + tf saved model
+
 3. Issue
 
     3.1. The model not able to recognize my name/company/brand
