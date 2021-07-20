@@ -6,3 +6,5 @@ wandb
 *.onnx
 *.pth
 *-checkpoint.ipynb
+build
+*info
