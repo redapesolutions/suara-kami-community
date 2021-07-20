@@ -5,6 +5,8 @@ Suara Kami: pre-trained STT models for Bahasa Malaysia.
 A simple pipeline for doing speech processing
 Works for GPU and CPU
 Small and fast
+Without pytorch or tf dependencies
+support multiple audio type
 
 1. Setup
 
@@ -19,37 +21,51 @@ pip install . --upgrade
 2. Usage
 
 ```
-Usage: sk MODEL FN <flags>
-  optional flags:        --decoder | --output_folder | --output_csv
+Usage: sk FN <flags>
+  optional flags:        --model | --decoder | --output_folder | --output_csv |
+                         --audio_type
 
 For detailed information on this command, run:
   sk --help
 ```
 
-Inference to one folder or multiple folders
+### Inference to one folder or multiple folders
 run code that point to a folder containing wav file
 ```
-sk conformer_small audio_folder_path
+sk audio_folder_path
 or
-sk conformer_small audio_folder_path --output_folder output
+sk audio_folder_path --output_folder output
 or
-sk conformer_small audio_folder_path --output_folder output --output_csv results.csv
+sk audio_folder_path --output_folder output --output_csv results.csv
 or 
-sk conformer_small audio_folder_path,audio_folder_path2
+sk audio_folder_path,audio_folder_path2
+or
+sk audio_folder --model conformer_tiny
+or
+sk audio_folder --audio_type .wav
+or
+sk audio_folder --audio_type .wav,.mp3 # for supporting other file type
 ```
 
-Inference to one or multiple files
+### Inference to one or multiple files
 run code that point to a wav file
 ```
-sk conformer_small audio_path.wav
+sk audio_path.wav
 or
-sk conformer_small audio_path.wav,audio_path2.wav
+sk audio_path.wav,audio_path2.wav
+or similar parameter to folder inference
+```
+
+### Inference to file and folder
+```
+sk audio_path.wav,audio_folder
+or similar to folder inference
 ```
 
 GPU Usage
 
 ```
-pip uninstall onnxruntime
+pip uninstall onnxruntime -y
 pip install onnxruntime-gpu
 ```
 

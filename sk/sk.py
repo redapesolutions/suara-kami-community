@@ -16,6 +16,10 @@ import os
 from pathlib import Path,PosixPath
 import numpy as np
 import requests
+from scipy.io.wavfile import read
+import io
+import warnings
+
 
 labels =  list(
     string.ascii_lowercase  # + string.digits
@@ -29,14 +33,20 @@ def process_text(a):
                 .replace("\\"," ").replace("/"," ").replace("*","").replace("&","dan").lower()
 
 def read_audio(fn):
-    with sf.SoundFile(fn, 'r') as f:
-        sample_rate = f.samplerate
-        samples = f.read(dtype="float32").transpose()
-        if 16000 != sample_rate:
-            samples = librosa.core.resample(samples, sample_rate, 16000)
-            sample_rate = 16000
+    try:
+        with sf.SoundFile(fn, 'r') as f:
+            sample_rate = f.samplerate
+            samples = f.read(dtype="float32").transpose()
+            if 16000 != sample_rate:
+                samples = librosa.core.resample(samples, sample_rate, 16000)
+                sample_rate = 16000
+            if samples.ndim > 2:
+                samples = np.mean(samples,1)
+    except:
+        print("warning: Not wav file, using slow audio reader")
+        samples,sample_rate = librosa.load(fn,16_000)
         if samples.ndim > 2:
-            samples = np.mean(samples,1)
+                samples = np.mean(samples,1)
     return samples,sample_rate
 
 def _get_files(p, fs, extensions=None):
@@ -66,10 +76,11 @@ def get_files(path, extensions=None, recurse=True, folders=None, followlinks=Tru
 try:
     import onnxruntime
     def to_numpy(tensor):
-        if "requires_grad" in tensor:
-            return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
-        else:
-            return tensor
+        return tensor
+        # if "requires_grad" in tensor:
+        #     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+        # else:
+        #     return tensor
     @patch
     def __call__(self:onnxruntime.capi.onnxruntime_inference_collection.InferenceSession, xs, length=None):
         ort_inputs = {self.get_inputs()[0].name: to_numpy(xs)}
@@ -82,72 +93,37 @@ except Exception as e:
     print(e)
     print("onnx not supported")
 
-def decode(out):
-    out2 = ["_"]+list(out)
-    collapsed = []
-    for idx,i in enumerate(out): # can run in parallel
-        if i!=out2[idx] and i!=blank:
-            collapsed.append(i)
-    return "".join([labels[i] for i in collapsed])
-
-def decodes(output):
-    n_jobs = 4
-    return pqdm(output,decode,n_jobs=n_jobs,disable=True)
-
-def inference(model,xs):
-    if "tensorflow" in str(type(model)):
-        import tensorflow as tf
-        xs = tf.constant(xs)
-        output = model(xs)["output_0"].numpy()
-    else:
-        output = model(xs)
-    log_probs = output
-    # log_probs = torch.nn.functional.log_softmax(output,-1) # for entropy later
-    entropy = -(log_probs.exp() * log_probs).sum(dim=-1).mean(-1)
-    log_probs = log_probs.argmax(-1)
-    log_probs = log_probs.contiguous()
-    text = decode(log_probs)
-    timesteps = [0]
-    return text,entropy,timesteps
-
-def inference_lm(model,xs,decoder):
-    if "tensorflow" in str(type(model)):
-        import tensorflow as tf
-        xs = tf.constant(xs)
-        output = model(xs)["output_0"].numpy()[0]
-        # output = torch.as_tensor(output)[0]
-    else:
-        output = model(xs)
-    if output.ndim == 3:
-        output = output[0]
-    log_probs = output
-    # probs = torch.nn.functional.softmax(output,-1)
-    out = decoder.decode_beams(to_numpy(log_probs),prune_history=True)
-    text, lm_state, timesteps, logit_score, lm_score = out[0]
-    entropy = -(np.exp(log_probs) * log_probs).sum(-1)
-    time = [i[-1] for i in timesteps]
-    entropy = [entropy[i[0]:i[1]].sum().item() for i in time]
-    return text,entropy,timesteps
+cache_model = {}
 
 def load_model(path):
+    path = Path(path)
+
     download_map = {
         "conformer_small": ["https://zenodo.org/record/5115792/files/conformer_small.onnx?download=1","https://f001.backblazeb2.com/file/suarakami/conformer_small.onnx"],
         "conformer_tiny": ["https://f001.backblazeb2.com/file/suarakami/conformer_tiny.onnx"],
     }
+    if path.stem in cache_model:
+        return cache_model[path.stem]
+    path = str(path)
     if path in download_map:
         # download weight
-        url = download_map[path][0]
-        filename = os.path.basename(url)
-        dl_path = os.path.join(Path.home(), ".sk/models")
-        os.makedirs(dl_path, exist_ok=True)
-        abs_path = os.path.join(dl_path, filename)
-        if not Path(abs_path).is_file():
-            chunk_size = 1024
-            print("downloading:",filename)
-            with requests.get(url, stream=True) as r, open(abs_path, "wb") as f:
-                for chunk in tqdm(r.iter_content(chunk_size=chunk_size),total=int(int(r.headers["Content-Length"])/chunk_size)):
-                    f.write(chunk)
-        path = abs_path
+        urls = download_map[path]
+        for url in urls:
+            filename = os.path.basename(url).split("?")[0]
+            dl_path = os.path.join(Path.home(), ".sk/models")
+            os.makedirs(dl_path, exist_ok=True)
+            abs_path = os.path.join(dl_path, filename)
+            try:
+                if not Path(abs_path).is_file():
+                    chunk_size = 1024
+                    print("downloading:",filename)
+                    with requests.get(url, stream=True) as r, open(abs_path, "wb") as f:
+                        for chunk in tqdm(r.iter_content(chunk_size=chunk_size),total=int(int(r.headers["Content-Length"])/chunk_size)):
+                            f.write(chunk)
+                path = abs_path
+            except:
+                continue
+            break
 
     path = Path(path)
     print("loading model")
@@ -169,6 +145,7 @@ def load_model(path):
     else:
         print("model type not recognized")
         return path
+    cache_model[path.stem] = model
     return model
 
 def load_decoder(path):
@@ -184,10 +161,50 @@ def load_decoder(path):
         beta=1.0, 
         ctc_token_idx=labels.index("_")
     )
-
     return decoder
 
-def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None):
+def decode(out):
+    out2 = ["_"]+list(out)
+    collapsed = []
+    for idx,i in enumerate(out): # can run in parallel
+        if i!=out2[idx] and i!=blank:
+            collapsed.append(i)
+    return "".join([labels[i] for i in collapsed])
+
+def decodes(output):
+    n_jobs = 4
+    return pqdm(output,decode,n_jobs=n_jobs,disable=True)
+
+def inference(model,xs):
+    if "tensorflow" in str(type(model)):
+        import tensorflow as tf
+        xs = tf.constant(xs)
+        output = model(xs)["output_0"].numpy()
+    else:
+        output = model(xs)
+    log_probs = output
+    entropy = -(np.exp(log_probs) * log_probs).sum(-1).mean(-1)
+    log_probs = log_probs.argmax(-1)
+    text = decode(log_probs)
+    timesteps = [0]
+    return text,entropy,timesteps
+
+def inference_lm(model,xs,decoder):
+    if "tensorflow" in str(type(model)):
+        import tensorflow as tf
+        xs = tf.constant(xs)
+        output = model(xs)["output_0"].numpy()
+    else:
+        output = model(xs)
+    log_probs = output
+    out = decoder.decode_beams(to_numpy(log_probs),prune_history=True)
+    text, lm_state, timesteps, logit_score, lm_score = out[0]
+    entropy = -(np.exp(log_probs) * log_probs).sum(-1)
+    time = [i[-1] for i in timesteps]
+    entropy = [entropy[i[0]:i[1]].sum().item() for i in time]
+    return text,entropy,timesteps
+
+def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_type=".wav"):
     """Predicting speech to text
 
     Args:
@@ -198,6 +215,7 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None):
     Returns:
         [type]: [description]
     """
+    global data
     if model is None: # if model not defined,use default model
         model = "conformer_small"
     if isinstance(model,str):
@@ -205,17 +223,36 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None):
     if isinstance(decoder,str):
         decoder = load_decoder(decoder)
 
+    if output_csv:
+        try:
+            import pandas as pd
+        except Exception as e:
+            print(e)
+            return
+
     if isinstance(fn,PosixPath):
         fn = str(fn)
 
     if isinstance(fn,str):
         fn = fn.split(",") # string to list, might break for filename with comma
     
+    if isinstance(fn,bytes):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            _,xs = read(io.BytesIO(fn))
+        xs = xs.astype(np.float32)[None]
+        if decoder:
+            text,entropy,tt = inference_lm(model,xs,decoder)
+        else:
+            text,entropy,tt = inference(model,xs)
+
+        return text,fn,entropy,tt
+            
     files = []
     print("Total input path:",len(fn))
     for i in fn:
-        files.extend([i] if Path(i).is_file() else get_files(i,[".wav"],recurse=True))
-    print("Total audio found:",len(files))
+        files.extend([i] if Path(i).is_file() else get_files(i,audio_type.split(","),recurse=True))
+    print(f"Total audio found({audio_type}):",len(files))
 
     preds = []
     ents = []
@@ -229,10 +266,8 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None):
             print(f"failed,",e)
             continue
         xs = data[None]
-        if decoder:
-            text,entropy,tt = inference_lm(model,xs,decoder)
-        else:
-            text,entropy,tt = inference(model,xs)
+        decoder = load_decoder(decoder)
+        text,entropy,tt = inference_lm(model,xs,decoder)
         preds.append(text)
         ents.append(entropy)
         timesteps.append(tt)
@@ -249,7 +284,6 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None):
                 f.write(pred)
 
     if output_csv:
-        import pandas as pd
         df = pd.DataFrame([fn,preds,ents,timesteps])
         df.columns = ["filename","prediction","entropy","timesteps"]
         if ".csv" not in output_csv:

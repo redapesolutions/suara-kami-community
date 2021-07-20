@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package vosk.stt.v1;
+package sk.stt.v1;
 
 import "google/protobuf/duration.proto";
 

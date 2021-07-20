@@ -4,3 +4,9 @@ pqdm
 fire
 pyctcdecode
 pypi-kenlm
+SoundFile
+librosa
+
+# for grpc deployment
+# grpcio-tools
+# grpcio

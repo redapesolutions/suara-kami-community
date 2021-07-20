@@ -6,13 +6,15 @@ import grpc
 import stt_service_pb2
 import stt_service_pb2_grpc
 
-CHUNK_SIZE = 4000
+sample_rate = 16_000
+
+CHUNK_SIZE = sample_rate // 2
 
 def gen(audio_file_name):
     specification = stt_service_pb2.RecognitionSpec(
         partial_results=True,
         audio_encoding='LINEAR16_PCM',
-        sample_rate_hertz=8000
+        sample_rate_hertz=sample_rate
     )
     streaming_config = stt_service_pb2.RecognitionConfig(specification=specification)
 
