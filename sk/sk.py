@@ -19,6 +19,7 @@ import requests
 from scipy.io.wavfile import read
 import io
 import warnings
+import zipfile
 
 
 labels =  list(
@@ -121,6 +122,7 @@ def load_model(path):
                         for chunk in tqdm(r.iter_content(chunk_size=chunk_size),total=int(int(r.headers["Content-Length"])/chunk_size)):
                             f.write(chunk)
                 path = abs_path
+                print("saved to:",path)
             except:
                 continue
             break
@@ -150,8 +152,41 @@ def load_model(path):
 
 def load_decoder(path):
     print("loading language model")
+    download_map = {
+        "v1":["https://zenodo.org/record/5117101/files/out.trie.zip?download=1"]
+    }
     from pyctcdecode import build_ctcdecoder
     import kenlm
+
+    if path in download_map:
+        # download weight
+        urls = download_map[path]
+        print("downloading language model of size 600+MB, might take a while")
+        print("recommend to build it yourself based on README tutorial")
+        for url in urls:
+            filename = os.path.basename(url).split("?")[0]
+            dl_path = os.path.join(Path.home(), ".sk/lm")
+            os.makedirs(dl_path, exist_ok=True)
+            abs_path = os.path.join(dl_path, filename)
+            try:
+                target_path = abs_path.replace(".zip","")
+                if not (Path(target_path).is_file() or Path(abs_path).is_file()):
+                    chunk_size = 1024
+                    print("downloading:",filename)
+                    with requests.get(url, stream=True) as r, open(abs_path, "wb") as f:
+                        for chunk in tqdm(r.iter_content(chunk_size=chunk_size),total=int(int(r.headers["Content-Length"])/chunk_size)):
+                            f.write(chunk)
+                if Path(abs_path).is_file():
+                    with zipfile.ZipFile(abs_path,"r") as zip_ref:
+                        target_path = abs_path.replace(".zip","")
+                        zip_ref.extractall(target_path)
+                    Path(abs_path).unlink() # delete zip file
+                path = target_path
+                print("saved to:",path)
+            except:
+                continue
+            break
+
     kenlm_model = kenlm.Model(path)
 
     decoder = build_ctcdecoder(
@@ -204,7 +239,7 @@ def inference_lm(model,xs,decoder):
     entropy = [entropy[i[0]:i[1]].sum().item() for i in time]
     return text,entropy,timesteps
 
-def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_type=".wav"):
+def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False):
     """Predicting speech to text
 
     Args:
@@ -258,6 +293,7 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
     ents = []
     timesteps = []
     processed_files = []
+    all_logits = []
     print("start prediction")
     for i in tqdm(files,total=len(files)):
         try:
@@ -266,14 +302,25 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
             print(f"failed,",e)
             continue
         xs = data[None]
-        decoder = load_decoder(decoder)
-        text,entropy,tt = inference_lm(model,xs,decoder)
+        if logits:
+            all_logits.append(model(xs))
+            processed_files.append(i)
+            continue
+        if decoder:
+            if isinstance(decoder,str):
+                decoder = load_decoder(decoder)
+            text,entropy,tt = inference_lm(model,xs,decoder)
+        else:
+            text,entropy,tt = inference(model,xs)
         preds.append(text)
         ents.append(entropy)
         timesteps.append(tt)
         processed_files.append(i)
 
     fn = [Path(i) for i in processed_files]
+
+    if logits:
+        return all_logits,fn
 
     if output_folder:
         output = Path(output_folder)
