@@ -82,7 +82,7 @@ CER and WER calculated using Jiwer
 | Conformer small-lm | w-ctc | 0.3 | 14   | -       |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
 | Conformer small    | rnnt  | TODO| TODO | TODO    |        |                                                                          |
 
-* All model trained on Google Colab with limited number of dataset because of Google Colab storage space limitation
+* All model trained on Google Colab with limited number of dataset and model size because of Google Colab hardware limitations
 
 Conformer_small: https://zenodo.org/record/5115792 - onnx + tf saved model
 
