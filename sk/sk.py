@@ -21,7 +21,6 @@ import io
 import warnings
 import zipfile
 
-
 labels =  list(
     string.ascii_lowercase  # + string.digits
 ) + [" ","_"]
@@ -78,10 +77,10 @@ try:
     import onnxruntime
     def to_numpy(tensor):
         return tensor
-        # if "requires_grad" in tensor:
-        #     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
-        # else:
-        #     return tensor
+        if "requires_grad" in tensor:
+            return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+        else:
+            return np.array(tensor)
     @patch
     def __call__(self:onnxruntime.capi.onnxruntime_inference_collection.InferenceSession, xs, length=None):
         ort_inputs = {self.get_inputs()[0].name: to_numpy(xs)}
@@ -114,8 +113,9 @@ def load_model(path):
             dl_path = os.path.join(Path.home(), ".sk/models")
             os.makedirs(dl_path, exist_ok=True)
             abs_path = os.path.join(dl_path, filename)
+            abs_path = Path(abs_path)
             try:
-                if not Path(abs_path).is_file():
+                if not abs_path.is_file():
                     chunk_size = 1024
                     print("downloading:",filename)
                     with requests.get(url, stream=True) as r, open(abs_path, "wb") as f:
@@ -139,7 +139,13 @@ def load_model(path):
         sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
         # Use OpenMP optimizations. Only useful for CPU, has little impact for GPUs.
         sess_options.intra_op_num_threads = multiprocessing.cpu_count()
-        model = onnxruntime.InferenceSession(str(path),sess_options)
+        try:
+            model = onnxruntime.InferenceSession(str(path),sess_options)
+        except Exception as e:
+            print(e)
+            print(f"onnx model corrupted, please remove {path} and rerun the code again")
+            return None
+
     elif path.suffix == ".pth":
         import torch
         model = torch.load(str(path))
@@ -255,6 +261,14 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
         model = "conformer_small"
     if isinstance(model,str):
         model = load_model(model)
+        if model is None:
+            print("loading model failed")
+            return {
+                "texts":[],
+                "filenames":[],
+                "entropy":[],
+                "timesteps":[]
+            }
     if isinstance(decoder,str):
         decoder = load_decoder(decoder)
 
@@ -280,8 +294,12 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
             text,entropy,tt = inference_lm(model,xs,decoder)
         else:
             text,entropy,tt = inference(model,xs)
-
-        return text,fn,entropy,tt
+        return {
+            "texts":text,
+            "filenames":fn,
+            "entropy":entropy,
+            "timesteps":tt,
+        }
             
     files = []
     print("Total input path:",len(fn))
@@ -320,7 +338,7 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
     fn = [Path(i) for i in processed_files]
 
     if logits:
-        return all_logits,fn
+        return {"logits":all_logits,"filenames":fn}
 
     if output_folder:
         output = Path(output_folder)
@@ -340,7 +358,29 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
     if output_folder or output_csv:
         return "done"
 
-    return preds,fn,ents,timesteps
+    return {
+        "texts":preds,
+        "filenames":fn,
+        "entropy":ents,
+        "timesteps":timesteps,
+    }
+
+def upload(path):
+    pass
+
+def compress(path):
+    pass
+
+def feedback(path):
+    path = Path(path)
+    if zipfile.is_zipfile(str(path)):
+        upload(path)
+    elif path.is_dir():
+        path = compress(path)
+        upload(path)
+    else:
+        upload(path)
+    return "done"
 
 if __name__ == "__main__":
     import fire
