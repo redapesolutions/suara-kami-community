@@ -6,6 +6,8 @@ pyctcdecode
 pypi-kenlm
 SoundFile
 librosa
+fastdownload
+smart_open[gcs]
 
 # for grpc deployment
 # grpcio-tools

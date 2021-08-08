@@ -1,25 +1,27 @@
 #! /usr/bin/env python
 import onnxruntime
 from pqdm.threads import pqdm
-from pathlib import Path
 import numpy as np
 from fastcore.basics import patch,setify
 from fastcore.foundation import L
-from pdb import set_trace
 from tqdm import tqdm
 import string
 import multiprocessing
+import subprocess
 
 import soundfile as sf
 import librosa
 import os
 from pathlib import Path,PosixPath
+from smart_open.smart_open_lib import patch_pathlib
+patch_pathlib()
 import numpy as np
 import requests
 from scipy.io.wavfile import read
 import io
 import warnings
-import zipfile
+
+info_path = Path.home()/".sk/info.txt"
 
 labels =  list(
     string.ascii_lowercase  # + string.digits
@@ -355,6 +357,11 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
             output_csv += ".csv"
         df.to_csv(output_csv)
         print("write csv to:",output_csv)
+
+    if __name__ == "__main__" and info_path.is_file() and int(info_path.read_text()) > 0:
+        print("Saving data")
+        [subprocess.Popen(f"feedback {i}",shell=True) for i in tqdm(fn)]
+
     if output_folder or output_csv:
         return "done"
 
@@ -365,23 +372,21 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
         "timesteps":timesteps,
     }
 
-def upload(path):
-    pass
-
-def compress(path):
-    pass
-
-def feedback(path):
-    path = Path(path)
-    if zipfile.is_zipfile(str(path)):
-        upload(path)
-    elif path.is_dir():
-        path = compress(path)
-        upload(path)
-    else:
-        upload(path)
-    return "done"
-
 if __name__ == "__main__":
+    if info_path.is_file():
+        info = info_path.read_text()
+    else:
+        msg = "Are you agree to allow us anonymously collecting your data for improving our model performance? (y/n): "
+        answer = input(msg)
+        info_path.parent.mkdir(exist_ok=True)
+        with info_path.open("w+") as f:
+            if answer == "y":
+                answer2 = input("Are you agree to share the collected data to the community? (y/n) :")
+                if answer2 == "y":
+                    f.write("2")
+                else:
+                    f.write('1')
+            else:
+                f.write('0')
     import fire
     fire.Fire(predict)
