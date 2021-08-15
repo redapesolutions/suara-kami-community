@@ -10,24 +10,14 @@ from pathlib import Path
 from smart_open.smart_open_lib import patch_pathlib
 patch_pathlib()
 import shutil
+import base64
 
 info_path = Path.home()/".sk/info.txt"
 
 def upload(path):
     path = Path(path)
-    config = {
-        "type": "service_account",
-        "project_id": "suara-kami-271607",
-        "private_key_id": "9b59c8caebf2482636d49c0f0d2724bb194ddb1d",
-        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC1I2autoJU7lC2\n2KDs0YipMd4nuvUuur7r6QYojbf3bjSQeCcjZIL1MHnxE6/N4Psm7udOV/eU7Y0R\naW9o4aYDWSZp7NzVErOvh9Ezlpvaw9kyk+XDmopFwuZi3Y2THfeO957MfcIuiqqA\niDZ+T73lZdT+esTXeYmMSXTyxGW/1Ot3nlzTYtRdvg+vjLIjltfliOYMf0nEAccF\ns47l2W9d18apj6tqNftXgL4Mz+xaGuY4FLDisIAQkpR9TL+cUfTQOxjgoXUeBEHQ\nONvxIfN51OsOJE2OuAMj8fpLl8K7AUgVai0bk0Aj+YrbaHIegNTRNdivoqEfSrSN\n57GmYfZlAgMBAAECggEAAYXLjxKdenPjlzRJK54NSiLPRvU4d2aX3g+Zsib5ODa9\nPi0/lizga70D4WXORGqsocsM6oJgMRvLSkcUUF58andjrizdpFrhlzGklAyJjdq3\nzWGJ4zPxQp0QGh4NQRw8E8yud7784WHgBTzGSUruG54Lns7OyPyBp/2I4qHwNJ8X\n1ILb7ClVP7PB7QHeQOZ5u/yYuGtsLTzY6B9QNLXItgxiScf+jkvvTOSpRlCmdtzq\nkoqIoE6b9QCifwa2Fi/cs9GrDUEUi/iz8jaqPoJhfrXU3eqMaNL3MTtiXvctDcHn\nJo7XsLU4Av9aS8QN+67SY4DQCXw9Kloyp0EKkDH5xwKBgQDwIKzd0jIW4d1ugWJq\nYLl7MRkZuTUm3o+2JQKBPEgvmEoJoDt4h/ZNMTdmo+XGWC+/BhPvvnvn4obCF3OP\niaALbFalSvTS5QoKzDnHV/l9ZEpk5dpNd5Vn8NWd3yCM7jWOcYDjAn5I5sEm85Be\nl9d20iAWthnIPbDp2Np2EiT1awKBgQDBHIlLyStAguQx2yCKOiNgHVms5420XS+j\n969GQFGfZARD0F2Rf+yAXTsu5kcM6Gp2fe5eJIOn1apIfqjahg5MPUo7q+sWjtRt\nVKmA4koOggjudYOcSW06f3iOE4xAePBK9+J7hJugAiyXD1HNqkE+D3ENKcft19AQ\nwkxInrjnbwKBgQDpWWeD3IsOj4mGpLdF1x8IZ0sUI1ZSon+XqtmHS1R+5Ag22H5S\ngBXLJ+PFm8pj+DjV8osXNM3mJs17+hwzxbNAxpRg5rmJ5Efg/Fu9q3Fo+DgPWwrM\ns0P+kRyV4UoZijeDaCuu7zJXl97mAlUuh3I8JrBGQcpGPCUa6sBJcxJ1ZwKBgGB7\nyX07/Yg13Z2rRg7KDXKwN2XUK1C6XlsmHUSUTjO83QSkzpsrtxZLfo5oL4ebd9XM\nBZSz2bO5ZWLjJapI4EvnM3es5cBXjHszmZzzctzcy2mY/TDQ3uojVjBmQ+TSh/xs\n7ZOZJchETdMLrGt9bSt8u5dAEMwcz7AP491EsE2xAoGBAM3Vj2E+b/OIntQ4MENd\nLQ4SIgBRmxJpCPN07NagpKocKVet3OL8W6goDuT6gE+VGc10qaYnGG0mVhxp0+kb\ndOJnCh3EHmZJyjTWpKdlxGaiaxjIIxp5PecoQBM9br0HsEvj3B8yVLPEB056/X5p\n8F/8pkLjN6YfEUhsuSFvZ/Pz\n-----END PRIVATE KEY-----\n",
-        "client_email": "sk-community@suara-kami-271607.iam.gserviceaccount.com",
-        "client_id": "102245550856807249082",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sk-community%40suara-kami-271607.iam.gserviceaccount.com"
-    }
-    credentials_info = json.loads(json.dumps(config))
+    config = "ewogICAgICAgICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgICAgICAgInByb2plY3RfaWQiOiAic3VhcmEta2FtaS0yNzE2MDciLAogICAgICAgICJwcml2YXRlX2tleV9pZCI6ICI5YjU5YzhjYWViZjI0ODI2MzZkNDljMGYwZDI3MjRiYjE5NGRkYjFkIiwKICAgICAgICAicHJpdmF0ZV9rZXkiOiAiLS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5NSUlFdmdJQkFEQU5CZ2txaGtpRzl3MEJBUUVGQUFTQ0JLZ3dnZ1NrQWdFQUFvSUJBUUMxSTJhdXRvSlU3bEMyXG4yS0RzMFlpcE1kNG51dlV1dXI3cjZRWW9qYmYzYmpTUWVDY2paSUwxTUhueEU2L040UHNtN3VkT1YvZVU3WTBSXG5hVzlvNGFZRFdTWnA3TnpWRXJPdmg5RXpscHZhdzlreWsrWERtb3BGd3VaaTNZMlRIZmVPOTU3TWZjSXVpcXFBXG5pRForVDczbFpkVCtlc1RYZVltTVNYVHl4R1cvMU90M25selRZdFJkdmcrdmpMSWpsdGZsaU9ZTWYwbkVBY2NGXG5zNDdsMlc5ZDE4YXBqNnRxTmZ0WGdMNE16K3hhR3VZNEZMRGlzSUFRa3BSOVRMK2NVZlRRT3hqZ29YVWVCRUhRXG5PTnZ4SWZONTFPc09KRTJPdUFNajhmcExsOEs3QVVnVmFpMGJrMEFqK1lyYmFISWVnTlRSTmRpdm9xRWZTclNOXG41N0dtWWZabEFnTUJBQUVDZ2dFQUFZWExqeEtkZW5Qamx6UkpLNTROU2lMUFJ2VTRkMmFYM2crWnNpYjVPRGE5XG5QaTAvbGl6Z2E3MEQ0V1hPUkdxc29jc002b0pnTVJ2TFNrY1VVRjU4YW5kanJpemRwRnJobHpHa2xBeUpqZHEzXG56V0dKNHpQeFFwMFFHaDROUVJ3OEU4eXVkNzc4NFdIZ0JUekdTVXJ1RzU0TG5zN095UHlCcC8ySTRxSHdOSjhYXG4xSUxiN0NsVlA3UEI3UUhlUU9aNXUveVl1R3RzTFR6WTZCOVFOTFhJdGd4aVNjZitqa3Z2VE9TcFJsQ21kdHpxXG5rb3FJb0U2YjlRQ2lmd2EyRmkvY3M5R3JEVUVVaS9pejhqYXFQb0poZnJYVTNlcU1hTkwzTVR0aVh2Y3REY0huXG5KbzdYc0xVNEF2OWFTOFFOKzY3U1k0RFFDWHc5S2xveXAwRUtrREg1eHdLQmdRRHdJS3pkMGpJVzRkMXVnV0pxXG5ZTGw3TVJrWnVUVW0zbysySlFLQlBFZ3ZtRW9Kb0R0NGgvWk5NVGRtbytYR1dDKy9CaFB2dm52bjRvYkNGM09QXG5pYUFMYkZhbFN2VFM1UW9LekRuSFYvbDlaRXBrNWRwTmQ1Vm44TldkM3lDTTdqV09jWURqQW41STVzRW04NUJlXG5sOWQyMGlBV3RobklQYkRwMk5wMkVpVDFhd0tCZ1FEQkhJbEx5U3RBZ3VReDJ5Q0tPaU5nSFZtczU0MjBYUytqXG45NjlHUUZHZlpBUkQwRjJSZit5QVhUc3U1a2NNNkdwMmZlNWVKSU9uMWFwSWZxamFoZzVNUFVvN3Erc1dqdFJ0XG5WS21BNGtvT2dnanVkWU9jU1cwNmYzaU9FNHhBZVBCSzkrSjdoSnVnQWl5WEQxSE5xa0UrRDNFTktjZnQxOUFRXG53a3hJbnJqbmJ3S0JnUURwV1dlRDNJc09qNG1HcExkRjF4OElaMHNVSTFaU29uK1hxdG1IUzFSKzVBZzIySDVTXG5nQlhMSitQRm04cGorRGpWOG9zWE5NM21KczE3K2h3enhiTkF4cFJnNXJtSjVFZmcvRnU5cTNGbytEZ1BXd3JNXG5zMFAra1J5VjRVb1ppamVEYUN1dTd6SlhsOTdtQWxVdWgzSThKckJHUWNwR1BDVWE2c0JKY3hKMVp3S0JnR0I3XG55WDA3L1lnMTNaMnJSZzdLRFhLd04yWFVLMUM2WGxzbUhVU1VUak84M1FTa3pwc3J0eFpMZm81b0w0ZWJkOVhNXG5CWlN6MmJPNVpXTGpKYXBJNEV2bk0zZXM1Y0JYakhzem1aenpjdHpjeTJtWS9URFEzdW9qVmpCbVErVFNoL3hzXG43Wk9aSmNoRVRkTUxyR3Q5YlN0OHU1ZEFFTXdjejdBUDQ5MUVzRTJ4QW9HQkFNM1ZqMkUrYi9PSW50UTRNRU5kXG5MUTRTSWdCUm14SnBDUE4wN05hZ3BLb2NLVmV0M09MOFc2Z29EdVQ2Z0UrVkdjMTBxYVluR0cwbVZoeHAwK2tiXG5kT0puQ2gzRUhtWkp5alRXcEtkbHhHYWlheGpJSXhwNVBlY29RQk05YnIwSHNFdmozQjh5VkxQRUIwNTYvWDVwXG44Ri84cGtMak42WWZFVWhzdVNGdlovUHpcbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS1cbiIsCiAgICAgICAgImNsaWVudF9lbWFpbCI6ICJzay1jb21tdW5pdHlAc3VhcmEta2FtaS0yNzE2MDcuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLAogICAgICAgICJjbGllbnRfaWQiOiAiMTAyMjQ1NTUwODU2ODA3MjQ5MDgyIiwKICAgICAgICAiYXV0aF91cmkiOiAiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tL28vb2F1dGgyL2F1dGgiLAogICAgICAgICJ0b2tlbl91cmkiOiAiaHR0cHM6Ly9vYXV0aDIuZ29vZ2xlYXBpcy5jb20vdG9rZW4iLAogICAgICAgICJhdXRoX3Byb3ZpZGVyX3g1MDlfY2VydF91cmwiOiAiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vb2F1dGgyL3YxL2NlcnRzIiwKICAgICAgICAiY2xpZW50X3g1MDlfY2VydF91cmwiOiAiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vcm9ib3QvdjEvbWV0YWRhdGEveDUwOS9zay1jb21tdW5pdHklNDBzdWFyYS1rYW1pLTI3MTYwNy5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIKICAgIH0="
+    credentials_info = json.loads(base64.b64decode(config)) # create only perm
     _credentials = service_account.Credentials.from_service_account_info(
         credentials_info
     )
@@ -41,7 +31,7 @@ def upload(path):
     file = path.open("rb")
     # print("uploading",path)
     try:
-        with open(f'gs://sk-community/{int(info_path.read_text())}/{datetime.now().strftime("%Y%m%d")}/{path.suffix}/{uuid.uuid4()}-{path.name}', 'wb',transport_params=dict(client=client)) as fout:
+        with open(f'gs://sk-community/{int(info_path.read_text())}/{datetime.now().strftime("%Y%m%d")}/{path.suffix}/{uuid.uuid4()}-sk-{path.name}', 'wb',transport_params=dict(client=client)) as fout:
             fout.write(file.read())
     except Exception as e:
         print(e)
@@ -64,5 +54,6 @@ def feedback(path):
     return path
 
 if __name__ == "__main__":
+    # feedback("/content/test/youtube/a564a4338247fa9e676386cbac6df515.wav")
     import fire
     fire.Fire(feedback)
