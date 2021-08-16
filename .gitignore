@@ -1,0 +1,10 @@
+*.pth
+*.csv
+__*
+!__init*
+wandb
+*.onnx
+*.pth
+*-checkpoint.ipynb
+build
+*info
