@@ -8,3 +8,6 @@
 At other terminal(client side)
 3. python3 stt_client.py --path /content/audio1.wav
 ```
+
+# Dependencies
+check requirements.txt, need to uncomment grpc part

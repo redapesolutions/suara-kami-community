@@ -23,7 +23,7 @@ if __name__ == "__main__":
         url="https://github.com/redapesolutions/suara-kami-community",
         license="MIT License",
         packages=find_packages(),
-        platforms=["linux", "unix"],
+        platforms=["linux", "unix","windows"],
         python_requires=">3.6",
         install_requires=required
     )
