@@ -25,6 +25,13 @@ Usage: sk FN <flags>
   optional flags:        --model | --decoder | --output_folder | --output_csv |
                          --audio_type
 
+FN              -> filepath
+--model         -> model name or model path
+--decoder       -> decoder name or decoder path
+--output_folder -> transcribed text target location
+--output_csv    -> transcribed text csv location
+--audio_type    -> if FN is folder, what type of audio format need to search
+
 For detailed information on this command, run:
   sk --help
 ```
@@ -60,6 +67,19 @@ or similar parameter to folder inference
 ```
 sk audio_path.wav,audio_folder
 or similar to folder inference
+```
+
+### Share data
+```
+Usage: feedback PATH
+
+For detailed information on this command, run:
+  feedback --help
+```
+```
+feedback data_to_share # folder structure should be audio and txt file with same name but different ext for example audio.wav and audio.txt in same folder
+feedback data_to_share.zip # same as above
+feedback audio.wav
 ```
 
 GPU Usage

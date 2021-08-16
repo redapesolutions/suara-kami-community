@@ -54,6 +54,5 @@ def feedback(path):
     return path
 
 if __name__ == "__main__":
-    # feedback("/content/test/youtube/a564a4338247fa9e676386cbac6df515.wav")
     import fire
     fire.Fire(feedback)
