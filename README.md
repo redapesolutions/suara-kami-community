@@ -3,9 +3,13 @@
 Suara Kami: pre-trained STT models for Bahasa Malaysia.
 
 A simple pipeline for doing speech processing
+
 Works for GPU and CPU
+
 Small and fast
+
 Without pytorch or tf dependencies
+
 support multiple audio type
 
 1. Setup
