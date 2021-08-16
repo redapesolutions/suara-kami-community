@@ -123,8 +123,8 @@ def load_model(path):
                     with requests.get(url, stream=True) as r, open(abs_path, "wb") as f:
                         for chunk in tqdm(r.iter_content(chunk_size=chunk_size),total=int(int(r.headers["Content-Length"])/chunk_size)):
                             f.write(chunk)
+                    print("saved to:",abs_path)
                 path = abs_path
-                print("saved to:",path)
             except:
                 continue
             break

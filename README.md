@@ -70,7 +70,7 @@ pip install onnxruntime-gpu
 ```
 
 GRPC Server/Client
-TODO
+check server/grpc folder
 
 CER and WER calculated using Jiwer
 
