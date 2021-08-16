@@ -359,7 +359,7 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
         print("write csv to:",output_csv)
 
     if __name__ == "__main__" and info_path.is_file() and int(info_path.read_text()) > 0:
-        print("Saving data")
+        print(f"Saving {len(fn)} data")
         [subprocess.Popen(f"feedback {i}",shell=True) for i in tqdm(fn)]
 
     if output_folder or output_csv:
