@@ -61,24 +61,25 @@ class SttServiceServicer(stt_service_pb2_grpc.SttServiceServicer):
         repeated = 0
         recent_response = ""
         final_text = ""
+        head = 40
         for request in request_iterator:
             buffer.append(request.audio_content)
-            text = predict(np.array(buffer).flatten().tobytes())["texts"]
+            out = predict(np.array(buffer).flatten().tobytes())
+            text = out["texts"]
             if text:
                 if recent_text == text:
                     repeated+=1
                 else:
                     recent_text = text
-                if repeated>8 and recent_response!=text: # repeated for 4 seconds
+                if repeated>8 and recent_response!=text: # repeated for 2 seconds
                     yield self.get_response(json.dumps({"text":text}))
                     recent_response = text
                     final_text += text + " "
                     repeated = 0
-                    head = 40
                     buffer = [buffer[0][:head] + buffer[-1][-8000+head:]]
                 elif partial:
                     yield self.get_response(json.dumps({"partial":text}))
-        yield self.get_response(json.dumps({"final":final_text + text,"text":text}))
+        yield self.get_response(json.dumps({"text":final_text + text}))
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor((os.cpu_count() or 1)))
