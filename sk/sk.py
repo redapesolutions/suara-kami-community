@@ -20,6 +20,7 @@ import requests
 from scipy.io.wavfile import read
 import io
 import warnings
+import shutil
 
 info_path = Path.home()/".sk/info.txt"
 
@@ -130,7 +131,7 @@ def load_model(path):
             break
 
     path = Path(path)
-    print("loading model")
+    # print("loading model")
     if path.is_dir():
         import tensorflow as tf
         tf_model = tf.saved_model.load(str(path))
@@ -159,7 +160,7 @@ def load_model(path):
     return model
 
 def load_decoder(path):
-    print("loading language model")
+    # print("loading language model")
     download_map = {
         "v1":["https://zenodo.org/record/5117101/files/out.trie.zip?download=1"]
     }
@@ -169,28 +170,26 @@ def load_decoder(path):
     if path in download_map:
         # download weight
         urls = download_map[path]
-        print("downloading language model of size 600+MB, might take a while")
-        print("recommend to build it yourself based on README tutorial")
+        # print("recommend to build it yourself based on README tutorial")
         for url in urls:
             filename = os.path.basename(url).split("?")[0]
             dl_path = os.path.join(Path.home(), ".sk/lm")
             os.makedirs(dl_path, exist_ok=True)
             abs_path = os.path.join(dl_path, filename)
             try:
-                target_path = abs_path.replace(".zip","")
+                target_path = abs_path.replace(".zip",".klm")
                 if not (Path(target_path).is_file() or Path(abs_path).is_file()):
                     chunk_size = 1024
-                    print("downloading:",filename)
+                    print(f"downloading {filename} language model of size 600+MB, might take a while")
                     with requests.get(url, stream=True) as r, open(abs_path, "wb") as f:
                         for chunk in tqdm(r.iter_content(chunk_size=chunk_size),total=int(int(r.headers["Content-Length"])/chunk_size)):
                             f.write(chunk)
-                if Path(abs_path).is_file():
-                    with zipfile.ZipFile(abs_path,"r") as zip_ref:
-                        target_path = abs_path.replace(".zip","")
-                        zip_ref.extractall(target_path)
+                abs_path = Path(abs_path)
+                if abs_path.is_file():
+                    shutil.unpack_archive(abs_path,abs_path.parent)
                     Path(abs_path).unlink() # delete zip file
+                    print("saved to:",target_path)
                 path = target_path
-                print("saved to:",path)
             except:
                 continue
             break
@@ -247,7 +246,7 @@ def inference_lm(model,xs,decoder):
     entropy = [entropy[i[0]:i[1]].sum().item() for i in time]
     return text,entropy,timesteps
 
-def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False):
+def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False):
     """Predicting speech to text
 
     Args:
@@ -258,9 +257,6 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
     Returns:
         [type]: [description]
     """
-    global data
-    if model is None: # if model not defined,use default model
-        model = "conformer_small"
     if isinstance(model,str):
         model = load_model(model)
         if model is None:
@@ -271,6 +267,10 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
                 "entropy":[],
                 "timesteps":[]
             }
+
+    if __name__ == "__main__" and decoder is None:
+        print("Can add '--decoder v1' to improve accuracy or prepare your own language model based on README")
+
     if isinstance(decoder,str):
         decoder = load_decoder(decoder)
 
@@ -314,7 +314,7 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
     timesteps = []
     processed_files = []
     all_logits = []
-    print("start prediction")
+    # print("start prediction")
     for i in tqdm(files,total=len(files)):
         try:
             data,_ = read_audio(str(i))
@@ -337,7 +337,9 @@ def predict(fn,model=None,decoder=None,output_folder=None,output_csv=None,audio_
         timesteps.append(tt)
         processed_files.append(i)
 
-    fn = [Path(i) for i in processed_files]
+
+    if __name__ != "__main__":
+        fn = [Path(i) for i in processed_files]
 
     if logits:
         return {"logits":all_logits,"filenames":fn}
