@@ -221,7 +221,7 @@ def inference(model,xs):
     if "tensorflow" in str(type(model)):
         import tensorflow as tf
         xs = tf.constant(xs)
-        output = model(xs)["output_0"].numpy()
+        output = model(xs)["log_probs"].numpy()
     else:
         output = model(xs)
     log_probs = output
@@ -235,7 +235,7 @@ def inference_lm(model,xs,decoder):
     if "tensorflow" in str(type(model)):
         import tensorflow as tf
         xs = tf.constant(xs)
-        output = model(xs)["output_0"].numpy()
+        output = model(xs)["log_probs"].numpy()
     else:
         output = model(xs)
     log_probs = output
@@ -244,7 +244,18 @@ def inference_lm(model,xs,decoder):
     entropy = -(np.exp(log_probs) * log_probs).sum(-1)
     time = [i[-1] for i in timesteps]
     entropy = [entropy[i[0]:i[1]].sum().item() for i in time]
-    return text,entropy,timesteps
+    duration = xs.shape[-1] / 16_000
+    mult = duration / log_probs.shape[0]
+    tt = []
+    for i in timesteps:
+        left = i[1][0]*mult
+        l = divmod(left,1)
+        left = l[0] + (l[1] * 0.06)
+        right = i[1][1]*mult
+        r = divmod(right,1)
+        right = r[0] + (r[1] * 0.06)
+        tt.append((i[0], round(left,2),round(right,2) ))
+    return text,entropy,tt
 
 def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False):
     """Predicting speech to text
@@ -265,7 +276,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
                 "texts":[],
                 "filenames":[],
                 "entropy":[],
-                "timesteps":[]
+                "timestamps":[]
             }
 
     if __name__ == "__main__" and decoder is None:
@@ -300,7 +311,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
             "texts":text,
             "filenames":fn,
             "entropy":entropy,
-            "timesteps":tt,
+            "timestamps":tt,
         }
             
     files = []
@@ -311,7 +322,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
 
     preds = []
     ents = []
-    timesteps = []
+    timestamps = []
     processed_files = []
     all_logits = []
     # print("start prediction")
@@ -334,7 +345,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
             text,entropy,tt = inference(model,xs)
         preds.append(text)
         ents.append(entropy)
-        timesteps.append(tt)
+        timestamps.append(tt)
         processed_files.append(i)
 
 
@@ -353,8 +364,8 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
                 f.write(pred)
 
     if output_csv:
-        df = pd.DataFrame([fn,preds,ents,timesteps])
-        df.columns = ["filename","prediction","entropy","timesteps"]
+        df = pd.DataFrame([fn,preds,ents,timestamps])
+        df.columns = ["filename","prediction","entropy","timestamps"]
         if ".csv" not in output_csv:
             output_csv += ".csv"
         df.to_csv(output_csv)
@@ -371,7 +382,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
         "texts":preds,
         "filenames":fn,
         "entropy":ents,
-        "timesteps":timesteps,
+        "timestamps":timestamps,
     }
 
 if __name__ == "__main__":

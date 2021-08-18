@@ -80,19 +80,18 @@ Can add '--decoder v1' to improve accuracy or prepare your own language model ba
 Total input path: 1
 Total audio found(.wav): 1
 texts:     ["kejadian ini bukanlah kejadian yang ni"]
-filenames: [PosixPath('/content/test-bahasa/wattpad-audio-wattpad-105.wav')]
+filenames: ['/content/test-bahasa/wattpad-audio-wattpad-105.wav']
 entropy:   [0.09318003]
 timesteps: [[0]]
 ```
-
 ```
 ➜  suara-kami-community git:(main) ✗ sk /content/test-bahasa/wattpad-audio-wattpad-105.wav --decoder v1
 Total input path: 1
 Total audio found(.wav): 1
 texts:     ["kejadian ini bukanlah kejadian yang ni"]
-filenames: [PosixPath('/content/test-bahasa/wattpad-audio-wattpad-105.wav')]
+filenames: ['/content/test-bahasa/wattpad-audio-wattpad-105.wav']
 entropy:   [[1.0360475778579712, 0.003976397216320038, 1.0852084159851074, 1.1668410301208496, 0.005958860740065575, 1.022503137588501]]
-timesteps: [[["kejadian", [5, 18]], ["ini", [20, 23]], ["bukanlah", [25, 34]], ["kejadian", [36, 48]], ["yang", [50, 54]], ["ni", [57, 61]]]]
+timestamps: [[["kejadian", 0.01, 0.04], ["ini", 0.04, 0.05], ["bukanlah", 0.06, 1.02], ["kejadian", 1.02, 1.05], ["yang", 1.05, 2.0], ["ni", 2.01, 2.02]]]
 ```
 ```
 ➜  suara-kami-community git:(main) ✗ sk /content/test-bahasa/wattpad-audio-wattpad-105.wav --decoder /content/out.trie.klm 
@@ -101,7 +100,7 @@ Total audio found(.wav): 1
 texts:     ["kejadian ini bukanlah kejadian yang ni"]
 filenames: ["/content/test-bahasa/wattpad-audio-wattpad-105.wav"]
 entropy:   [[1.0360475778579712, 0.003976397216320038, 1.0852084159851074, 1.1668410301208496, 0.005958860740065575, 1.022503137588501]]
-timesteps: [[["kejadian", [5, 18]], ["ini", [20, 23]], ["bukanlah", [25, 34]], ["kejadian", [36, 48]], ["yang", [50, 54]], ["ni", [57, 61]]]]
+timestamps: [[["kejadian", 0.01, 0.04], ["ini", 0.04, 0.05], ["bukanlah", 0.06, 1.02], ["kejadian", 1.02, 1.05], ["yang", 1.05, 2.0], ["ni", 2.01, 2.02]]]
 ```
 
 ### Share data
