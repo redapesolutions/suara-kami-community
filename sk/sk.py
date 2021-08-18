@@ -292,6 +292,9 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
             print(e)
             return
 
+    if fn == "initsk":
+        return "done init"
+
     if isinstance(fn,PosixPath):
         fn = str(fn)
 
