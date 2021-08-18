@@ -12,6 +12,8 @@ Without pytorch or tf dependencies
 
 support multiple audio type
 
+Can run from CLI or python import
+
 1. Setup
 
 ```
@@ -24,6 +26,17 @@ pip install . --upgrade
 
 2. Usage
 
+Using Python
+```
+from sk import predict
+predict(filepath)
+or
+predict(filepath,"conformer_tiny")
+or 
+predict(filepath,decoder="v1")
+```
+
+Using Cli
 ```
 Usage: sk FN <flags>
   optional flags:        --model | --decoder | --output_folder | --output_csv |
