@@ -20,10 +20,10 @@ def index():
         if file:
             file.save("/tmp/audio.wav")
             transcript = predict("/tmp/audio.wav")["texts"][0]
+            # transcript = predict("/tmp/audio.wav",decoder="v1")["texts"][0] # with language model for better output
             print(transcript)
 
     return render_template('index.html', transcript=transcript)
-
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True)
