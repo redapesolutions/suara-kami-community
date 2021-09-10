@@ -17,7 +17,7 @@ Can run from CLI or python import
 1. Setup
 
 ```
-pip install https://github.com/redapesolutions/suara-kami-community
+pip install git+https://github.com/redapesolutions/suara-kami-community
 or
 git clone https://github.com/redapesolutions/suara-kami-community
 cd suara-kami-community
