@@ -9,7 +9,6 @@ import string
 import multiprocessing
 import subprocess
 
-import soundfile as sf
 import librosa
 import os
 from pathlib import Path,PosixPath
@@ -36,20 +35,9 @@ def process_text(a):
                 .replace("\\"," ").replace("/"," ").replace("*","").replace("&","dan").lower()
 
 def read_audio(fn):
-    try:
-        with sf.SoundFile(fn, 'r') as f:
-            sample_rate = f.samplerate
-            samples = f.read(dtype="float32").transpose()
-            if 16000 != sample_rate:
-                samples = librosa.core.resample(samples, sample_rate, 16000)
-                sample_rate = 16000
-            if samples.ndim > 2:
-                samples = np.mean(samples,1)
-    except:
-        print("warning: Not wav file, using slow audio reader")
-        samples,sample_rate = librosa.load(fn,16_000)
-        if samples.ndim > 2:
-                samples = np.mean(samples,1)
+    samples,sample_rate = librosa.load(fn,16_000)
+    if samples.ndim > 2:
+            samples = np.mean(samples,1)
     return samples,sample_rate
 
 def _get_files(p, fs, extensions=None):

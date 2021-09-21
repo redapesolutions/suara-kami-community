@@ -4,6 +4,5 @@ pqdm
 fire
 pyctcdecode
 pypi-kenlm
-SoundFile
 librosa
 smart_open[gcs]
