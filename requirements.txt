@@ -6,3 +6,4 @@ pyctcdecode
 pypi-kenlm
 librosa
 smart_open[gcs]
+soundfile
