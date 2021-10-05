@@ -13,7 +13,7 @@ scripts = ["scripts/"+i for i in listdir("scripts")]
 if __name__ == "__main__":
     setup(
         name="suara-kami-community",
-        version="1.0.1",
+        version="1.1.1",
         scripts=scripts,
         description="Bahasa Malaysia Speech to Text",
         long_description=long_description,

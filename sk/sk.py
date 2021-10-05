@@ -245,7 +245,31 @@ def inference_lm(model,xs,decoder):
         tt.append((i[0], round(left,2),round(right,2) ))
     return text,entropy,tt
 
-def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False):
+def create_labelling(labels,wav_splits,output):
+    times = [s.start / 16_000 for s in wav_splits]
+    labelling = []
+    start_time = 0
+
+    for i,time in enumerate(times):
+        if i>0 and labels[i]!=labels[i-1]:
+            temp = [str(labels[i-1]),start_time,time]
+            labelling.append(tuple(temp))
+            start_time = time
+        if i==len(times)-1:
+            temp = [str(labels[i]),start_time,time]
+            labelling.append(tuple(temp))
+    speaker = []
+    for l in labelling:
+        start = l[1]
+        end = l[2]
+        chunks = list(filter(lambda i:i[1]>=start and i[2]<=end,output))
+        if len(chunks) == 0:
+            continue
+        else:
+            speaker.append([l[0],chunks])
+    return speaker
+
+def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False,speaker=False):
     """Predicting speech to text
 
     Args:
@@ -269,6 +293,19 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
 
     if __name__ == "__main__" and decoder is None:
         print("Can add '--decoder v1' to improve accuracy or prepare your own language model based on README")
+
+    if speaker:
+        if decoder is None:
+            print("enable decoder v1 for speaker timesteps")
+            decoder = "v1"
+        from resemblyzer import preprocess_wav, VoiceEncoder
+        from spectralcluster import SpectralClusterer
+        encoder = VoiceEncoder("cpu")
+        clusterer = SpectralClusterer(
+            min_clusters=1,
+            max_clusters=100,
+            p_percentile=0.95,
+            gaussian_blur_sigma=30)
 
     if isinstance(decoder,str):
         decoder = load_decoder(decoder)
@@ -316,8 +353,10 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
     timestamps = []
     processed_files = []
     all_logits = []
+    speakers = []
     # print("start prediction")
     for i in tqdm(files,total=len(files)):
+        spkr = ["not enabled"]
         try:
             data,_ = read_audio(str(i))
         except Exception as e:
@@ -332,12 +371,18 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
             if isinstance(decoder,str):
                 decoder = load_decoder(decoder)
             text,entropy,tt = inference_lm(model,xs,decoder)
+            if speaker:
+                _, cont_embeds, wav_splits = encoder.embed_utterance(preprocess_wav(str(i)), return_partials=True, rate=16)
+                labels = clusterer.predict(cont_embeds)
+                spkr = create_labelling(labels,wav_splits,tt)
         else:
             text,entropy,tt = inference(model,xs)
+        
         preds.append(text)
         ents.append(entropy)
         timestamps.append(tt)
         processed_files.append(i)
+        speakers.append(spkr)
 
 
     if __name__ != "__main__":
@@ -374,6 +419,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
         "filenames":fn,
         "entropy":ents,
         "timestamps":timestamps,
+        "speakers":speakers
     }
 
 if __name__ == "__main__":

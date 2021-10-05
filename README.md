@@ -164,6 +164,7 @@ Conformer_small: https://zenodo.org/record/5115792 - onnx + tf saved model
 - [Speech to Text w/ Language model](./tutorials/2.speech_to_text_with_language_model.ipynb)
 - [Convert Speech text to Written text form](./tutorials/3.normalize_text.ipynb)
 - [Simple Speech to Text using tf saved model](./tutorials/4.tensorflow_inference.ipynb)
+- [Diarization](./tutorials/5.diarization.ipynb)
 - [Prepare Language Model](https://github.com/huseinzol05/malaya-speech/blob/b44d08a225ce9ea6881527cd66018453feb1ace4/pretrained-model/stt/prepare-lm/README.md#L10)
 
 4. Issue
