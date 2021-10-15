@@ -269,7 +269,7 @@ def create_labelling(labels,wav_splits,output):
             speaker.append([l[0],chunks])
     return speaker
 
-def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False,speaker=False):
+def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False,speaker=False,verbose=True):
     """Predicting speech to text
 
     Args:
@@ -343,10 +343,12 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
         }
             
     files = []
-    print("Total input path:",len(fn))
+    if verbose:
+        print("Total input path:",len(fn))
     for i in fn:
         files.extend([i] if Path(i).is_file() else get_files(i,audio_type.split(","),recurse=True))
-    print(f"Total audio found({audio_type}):",len(files))
+    if verbose:
+        print(f"Total audio found({audio_type}):",len(files))
 
     preds = []
     ents = []
@@ -355,7 +357,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
     all_logits = []
     speakers = []
     # print("start prediction")
-    for i in tqdm(files,total=len(files)):
+    for i in tqdm(files,total=len(files),disable=not verbose):
         spkr = ["not enabled"]
         try:
             data,_ = read_audio(str(i))

@@ -22,6 +22,12 @@ or
 git clone https://github.com/redapesolutions/suara-kami-community
 cd suara-kami-community
 pip install . --upgrade
+
+fixing error(optional)
+1. error: command 'gcc' failed: No such file or directory
+-> sudo apt install build-essential gcc
+2. OSError: sndfile library not found
+-> sudo apt-get install libsndfile1
 ```
 
 2. Usage

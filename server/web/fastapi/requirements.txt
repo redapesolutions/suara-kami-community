@@ -1,2 +1,5 @@
 uvicorn[standard]
 fastapi
+git+https://github.com/redapesolutions/suara-kami-community
+locust
+python-multipart
