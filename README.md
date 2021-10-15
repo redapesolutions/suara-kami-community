@@ -14,7 +14,7 @@ support multiple audio type
 
 Can run from CLI or python import
 
-[Load test report]("./loadtest.html")
+[Load test report](loadtest.html)
 
 1. Setup
 
