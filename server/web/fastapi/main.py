@@ -34,20 +34,23 @@ async def get_file_size(file: bytes = File(...)):
     return {"file_size": len(file)}
 
 
+saved = Path("files")
+saved.mkdir(exist_ok=True)
+
 @app.post("/transcript")
 async def transcript(file: UploadFile = File(...),name:str=Body(...),label:str=Body(...)):
-    dest = Path(f"files/{uuid4()}")
+    dest = saved/f"{uuid4()}"
     try:
         with dest.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
     finally:
         file.file.close()
-    transcript = predict(dest)["texts"][0]
+    transcript = predict(dest,verbose=False)["texts"][0]
     if name=="hidden":
         name = ""
     if label=="no label":
         label = ""
-    print("param",name,label)
+    # print("param",name,label)
     # audio = Audio(name=name,label=label,predicted=transcript,dest=str(dest))
     # audio.insert()
     return transcript
@@ -58,4 +61,4 @@ def read_root():
     html_content = "test"
     return HTMLResponse(content=html_content, status_code=200)
 
-predict("./test.wav")
+predict("./test.wav",verbose=False)

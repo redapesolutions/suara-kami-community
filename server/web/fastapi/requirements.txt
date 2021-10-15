@@ -1,4 +1,5 @@
 uvicorn[standard]
+gunicorn
 fastapi
 git+https://github.com/redapesolutions/suara-kami-community
 locust
