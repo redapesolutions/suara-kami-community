@@ -14,7 +14,7 @@ support multiple audio type
 
 Can run from CLI or python import
 
-[Load test report](loadtest.html)
+[Load test report](https://htmlpreview.github.io/?https://github.com/redapesolutions/suara-kami-community/blob/main/loadtest.html)
 
 1. Setup
 
