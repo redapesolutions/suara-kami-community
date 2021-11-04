@@ -15,6 +15,7 @@ support multiple audio type
 Can run from CLI or python import
 
 [Load test report](https://htmlpreview.github.io/?https://github.com/redapesolutions/suara-kami-community/blob/main/loadtest.html)
+[Demo](https://huggingface.co/spaces/malay-huggingface/suarakami)
 
 1. Setup
 

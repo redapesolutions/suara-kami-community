@@ -7,5 +7,4 @@ pypi-kenlm==0.1.20210121
 librosa==0.8.1
 smart_open[gcs]
 spectralcluster==0.1.0
-resemblyzer
 pydub==0.25.1

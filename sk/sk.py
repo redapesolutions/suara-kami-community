@@ -298,12 +298,16 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
         if decoder is None:
             print("enable decoder v1 for speaker timesteps")
             decoder = "v1"
-        from resemblyzer import preprocess_wav, VoiceEncoder
+        try:
+            from resemblyzer import preprocess_wav, VoiceEncoder
+        except:
+            print("installing resemblyzer")
+            os.system("pip install resemblyzer")
         from spectralcluster import SpectralClusterer
         encoder = VoiceEncoder("cpu")
         clusterer = SpectralClusterer(
             min_clusters=1,
-            max_clusters=100,
+            max_clusters=5,
             p_percentile=0.95,
             gaussian_blur_sigma=30)
 

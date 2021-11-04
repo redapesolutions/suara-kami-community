@@ -38,7 +38,8 @@ saved = Path("files")
 saved.mkdir(exist_ok=True)
 
 @app.post("/transcript")
-async def transcript(file: UploadFile = File(...),name:str=Body(...),label:str=Body(...)):
+# async def transcript(file: UploadFile = File(...),name:str=Body(...),label:str=Body(...)):
+async def transcript(file: UploadFile = File(...)):
     dest = saved/f"{uuid4()}"
     try:
         with dest.open("wb") as buffer:
@@ -46,10 +47,10 @@ async def transcript(file: UploadFile = File(...),name:str=Body(...),label:str=B
     finally:
         file.file.close()
     transcript = predict(dest,verbose=False)["texts"][0]
-    if name=="hidden":
-        name = ""
-    if label=="no label":
-        label = ""
+    # if name=="hidden":
+    #     name = ""
+    # if label=="no label":
+    #     label = ""
     # print("param",name,label)
     # audio = Audio(name=name,label=label,predicted=transcript,dest=str(dest))
     # audio.insert()
