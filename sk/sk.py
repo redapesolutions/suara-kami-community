@@ -92,6 +92,7 @@ def load_model(path):
     download_map = {
         "conformer_small": ["https://zenodo.org/record/5115792/files/conformer_small.onnx?download=1","https://f001.backblazeb2.com/file/suarakami/conformer_small.onnx"],
         "conformer_tiny": ["https://f001.backblazeb2.com/file/suarakami/conformer_tiny.onnx"],
+        "conformer_medium": ["https://suarakami.s3.us-west-001.backblazeb2.com/medium.onnx"]
     }
     if path.stem in cache_model:
         return cache_model[path.stem]
