@@ -18,7 +18,6 @@ from fastapi.responses import HTMLResponse
 #         'predicted',
 #         'dest'
 #         }
-    
 
 app = FastAPI()
 app.add_middleware(
@@ -56,10 +55,22 @@ async def transcript(file: UploadFile = File(...)):
     # audio.insert()
     return transcript
 
+@app.post("/transcript")
+# async def transcript(file: UploadFile = File(...),name:str=Body(...),label:str=Body(...)):
+async def speaker_transcript(file: UploadFile = File(...)):
+    dest = saved/f"{uuid4()}"
+    try:
+        with dest.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    finally:
+        file.file.close()
+    transcript = predict(dest,verbose=False,speaker=True,decoder="v1")["texts"][0]
+    return transcript
+
 @app.get("/",response_class=HTMLResponse)
 def read_root():
     # html_content = open("pages/demo.html").read()
     html_content = "test"
     return HTMLResponse(content=html_content, status_code=200)
 
-predict("./test.wav",verbose=False)
+print(predict("./test.wav",verbose=False,speaker=True,decoder="v1"))
