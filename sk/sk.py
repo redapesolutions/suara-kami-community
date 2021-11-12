@@ -304,6 +304,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
         except:
             print("installing resemblyzer")
             os.system("pip install resemblyzer")
+            from resemblyzer import preprocess_wav, VoiceEncoder
         from spectralcluster import SpectralClusterer
         encoder = VoiceEncoder("cpu")
         clusterer = SpectralClusterer(
