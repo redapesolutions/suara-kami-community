@@ -124,7 +124,7 @@ class SK(object):
     def transcribe_array(self,array):
         return transcribe_array(array,self.model,self.decoder)
 
-def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False,speaker=False,verbose=True):
+def predict(fn,model="conformer_small",decoder="",output_folder=None,output_csv=None,audio_type=".wav",logits=False,speaker=False,verbose=True):
     """Predicting speech to text
 
     Args:
