@@ -9,6 +9,7 @@ import string
 import os
 from fastcore.basics import patch,setify
 import numpy as np
+from fastcore.foundation import L
 
 def get_labels(model_name):
     if "en" in model_name:
@@ -194,6 +195,9 @@ def load_model(path):
 
 def load_lm(path):
     # print("loading language model")
+    if not isinstance(path,str):
+        return path
+        
     labels = get_labels(path)
 
     download_map = {

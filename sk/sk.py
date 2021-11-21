@@ -13,7 +13,6 @@ try:
 except ValueError: # Already removed
     pass
 
-from fastcore.foundation import L
 from tqdm import tqdm
 import subprocess
 
@@ -28,13 +27,28 @@ from sk.utils import *
 
 info_path = Path.home()/".sk/info.txt"
 
-def transcribe_file(files,model,decoder=None,logits=False,speaker=False,verbose=True):
+def transcribe_file(fn,model,decoder=None,audio_type=".wav",logits=False,speaker=False,verbose=True):
     preds = []
     ents = []
     timestamps = []
     processed_files = []
     all_logits = []
     speakers = []
+
+    if isinstance(fn,PosixPath):
+        fn = str(fn)
+
+    if isinstance(fn,str):
+        fn = fn.split(",") # string to list, might break for filename with comma
+
+    files = []
+    if verbose:
+        print("Total input path:",len(fn))
+    for i in fn:
+        files.extend([i] if Path(i).is_file() else get_files(i,audio_type.split(","),recurse=True))
+    if verbose:
+        print(f"Total audio found({audio_type}):",len(files))
+
     if speaker:
         try:
             from resemblyzer import preprocess_wav, VoiceEncoder
@@ -81,7 +95,14 @@ def transcribe_file(files,model,decoder=None,logits=False,speaker=False,verbose=
         timestamps.append(tt)
         processed_files.append(i)
         speakers.append(spkr)
-    return preds,ents,timestamps,processed_files,speakers,all_logits
+    return {
+        "texts":preds,
+        "filenames":processed_files,
+        "entropy": ents,
+        "timestamps": timestamps,
+        "speakers": speakers,
+        "all_logits":all_logits
+    }
 
 def transcribe_bytes(b,model,decoder=None):
     with warnings.catch_warnings():
@@ -124,7 +145,7 @@ class SK(object):
     def transcribe_array(self,array):
         return transcribe_array(array,self.model,self.decoder)
 
-def predict(fn,model="conformer_small",decoder="",output_folder=None,output_csv=None,audio_type=".wav",logits=False,speaker=False,verbose=True):
+def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False,speaker=False,verbose=True):
     """Predicting speech to text
 
     Args:
@@ -148,23 +169,13 @@ def predict(fn,model="conformer_small",decoder="",output_folder=None,output_csv=
         return asr.transcribe_bytes(b=fn)
     if isinstance(fn,np.ndarray):
         return asr.transcribe_array(array=fn)
-
-    if isinstance(fn,PosixPath):
-        fn = str(fn)
-
-    if isinstance(fn,str):
-        fn = fn.split(",") # string to list, might break for filename with comma
-
-    files = []
-    if verbose:
-        print("Total input path:",len(fn))
-    for i in fn:
-        files.extend([i] if Path(i).is_file() else get_files(i,audio_type.split(","),recurse=True))
-    if verbose:
-        print(f"Total audio found({audio_type}):",len(files))
-
-    preds,ents,timestamps,processed_files,speakers,all_logits = asr.transcribe_file(files=files,logits=logits,speaker=speaker,verbose=verbose)
-
+    
+    out = asr.transcribe_file(fn=fn,audio_type=".wav",logits=logits,speaker=speaker,verbose=verbose)
+    preds = out["texts"]
+    ents = out["entropy"]
+    timestamps = out["timestamps"]
+    processed_files = out["filenames"]
+    speakers = out["speakers"]
     if __name__ != "__main__":
         fn = [Path(i) for i in processed_files]
 
