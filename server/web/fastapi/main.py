@@ -54,6 +54,6 @@ def read_root():
     html_content = "test"
     return HTMLResponse(content=html_content, status_code=200)
 
-# print(predict("./test.wav",verbose=False,speaker=True,decoder="v1"))
 print("warming up prediction")
-print(predict("./test.wav",verbose=False))
+print(predict("./test.wav",verbose=False,speaker=True,decoder="v1"))
+# print(predict("./test.wav",verbose=False))

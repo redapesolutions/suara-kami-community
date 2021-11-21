@@ -4,4 +4,4 @@
 or
 
 1. docker build -t sk .
-2. docker run -p 9000:9000 sk
+2. docker run -p 80:80 sk

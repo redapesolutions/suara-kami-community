@@ -6,5 +6,4 @@ pyctcdecode==0.1.0
 pypi-kenlm==0.1.20210121
 librosa==0.8.1
 smart_open[gcs]
-spectralcluster==0.1.0
 pydub==0.25.1
