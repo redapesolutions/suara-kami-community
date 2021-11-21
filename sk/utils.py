@@ -128,8 +128,10 @@ def decodes(output):
 cache_model = {}
 
 def load_model(path):
-    path = Path(path)
+    if not isinstance(path,str):
+        return path
 
+    path = Path(path)
     download_map = {
         "conformer_small": ["https://zenodo.org/record/5115792/files/conformer_small.onnx?download=1","https://f001.backblazeb2.com/file/suarakami/conformer_small.onnx"],
         "conformer_tiny": ["https://f001.backblazeb2.com/file/suarakami/conformer_tiny.onnx"],

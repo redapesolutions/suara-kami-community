@@ -1,18 +1,7 @@
 import subprocess as sp
-import json
-import os
 import numpy as np
-from sk import predict
+from sk import SK
 from pdb import set_trace
-import logging
-import warnings
-# create logger with 'spam_application'
-logger = logging.getLogger('transcript')
-logger.setLevel(logging.DEBUG)
-# create file handler which logs even debug messages
-fh = logging.FileHandler('transcript.log')
-fh.setLevel(logging.DEBUG)
-logger.addHandler(fh)
 CHUNK_SIZE = 4000
 
 def video_frames_ffmpeg(url):
@@ -22,13 +11,14 @@ def video_frames_ffmpeg(url):
     buffer = []
     current_text = ""
     repeated = 0
+    asr = SK(decoder="v1")
     while True:
         data = p.stdout.read(CHUNK_SIZE * 40)
         data = np.frombuffer(data, dtype=np.float32)
         buffer.append(data)
         inp = np.array(buffer).flatten()
         print(inp.shape)
-        out = predict(inp,model="conformer_small",decoder="v1")
+        out = asr.transcribe_array(inp)
         # logger.info(out)
         print(out["texts"])
         buffer = []

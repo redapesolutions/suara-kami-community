@@ -113,6 +113,17 @@ def transcribe_array(array,model,decoder=None):
         "timestamps":tt,
     }
 
+class SK(object):
+    def __init__(self,model="conformer_small",decoder=None):
+        self.model = load_model(model)
+        self.decoder = load_lm(decoder)
+    def transcribe_file(self,**kwargs):
+        return transcribe_file(model=self.model,decoder=self.decoder,**kwargs)
+    def transcribe_bytes(self,b):
+        return transcribe_bytes(b,self.model,self.decoder)
+    def transcribe_array(self,array):
+        return transcribe_array(array,self.model,self.decoder)
+
 def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_csv=None,audio_type=".wav",logits=False,speaker=False,verbose=True):
     """Predicting speech to text
 
@@ -131,31 +142,12 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
             print(e)
             return
 
-    if isinstance(model,str):
-        model = load_model(model)
-        if model is None:
-            print("loading model failed")
-            return {
-                "texts":[],
-                "filenames":[],
-                "entropy":[],
-                "timestamps":[]
-            }
-
-    if __name__ == "__main__" and decoder is None:
-        print("Can add '--decoder v1' to improve accuracy or prepare your own language model based on README")
-
-    if speaker and decoder is None:
-        print("enable decoder v1 for speaker timesteps")
-        decoder = "v1"
-
-    if isinstance(decoder,str):
-        decoder = load_lm(decoder)
+    asr = SK(model,decoder)
 
     if isinstance(fn,bytes):
-        return transcribe_bytes(fn,model,decoder)
+        return asr.transcribe_bytes(b=fn)
     if isinstance(fn,np.ndarray):
-        return transcribe_array(fn,model,decoder)
+        return asr.transcribe_array(array=fn)
 
     if isinstance(fn,PosixPath):
         fn = str(fn)
@@ -171,7 +163,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
     if verbose:
         print(f"Total audio found({audio_type}):",len(files))
 
-    preds,ents,timestamps,processed_files,speakers,all_logits = transcribe_file(files,model,decoder,logits,speaker,verbose)
+    preds,ents,timestamps,processed_files,speakers,all_logits = asr.transcribe_file(files=files,logits=logits,speaker=speaker,verbose=verbose)
 
     if __name__ != "__main__":
         fn = [Path(i) for i in processed_files]
