@@ -15,7 +15,6 @@ def get_labels(model_name):
         labels = ['[PAD]','[UNK]','[CLS]','[SEP]','[MASK]',"'",'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','##r','##a','##y','##f','##i','##s','##h','##d','##e','##p','##o','##l','##c','##n','##m','##t','##g','##w','##v','##u','##x','##b','##k','##z','##q','##j','th','the','##er','##nd','##in','##ed','##ou','##at','##en','and','##or','##es','to','of','##on','##is','##ing','##ar','##it','##as','##an','##ll','in','##re','wh','he','##om','be','ha','##le','##ot','##ow','##ic','##ut','it','##ld','that','sh','##ly','was','##gh','##id','##se','on','##ve','##et','##ent','you','##im','##st','##ce','##ith','for','##ir','##ion','as','##ay','his','##al','with','##ur','st','##ter','her','##ver','##ch','re','##ad','##ght','an']
     else:
         labels = list(string.ascii_lowercase) + [" "]
-    print(labels,model_name)
     return labels + ["_"]
 
 try:
@@ -200,7 +199,6 @@ def load_lm(path):
         "en":["https://zenodo.org/record/5716345/files/mixed-lower.binary.zip?download=1"]
     }
     from pyctcdecode import build_ctcdecoder
-    import kenlm
 
     if path in download_map:
         # download weight
