@@ -10,6 +10,14 @@ import os
 from fastcore.basics import patch,setify
 import numpy as np
 
+def get_labels(model_name):
+    if "en" in model_name:
+        labels = ['[PAD]','[UNK]','[CLS]','[SEP]','[MASK]',"'",'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','##r','##a','##y','##f','##i','##s','##h','##d','##e','##p','##o','##l','##c','##n','##m','##t','##g','##w','##v','##u','##x','##b','##k','##z','##q','##j','th','the','##er','##nd','##in','##ed','##ou','##at','##en','and','##or','##es','to','of','##on','##is','##ing','##ar','##it','##as','##an','##ll','in','##re','wh','he','##om','be','ha','##le','##ot','##ow','##ic','##ut','it','##ld','that','sh','##ly','was','##gh','##id','##se','on','##ve','##et','##ent','you','##im','##st','##ce','##ith','for','##ir','##ion','as','##ay','his','##al','with','##ur','st','##ter','her','##ver','##ch','re','##ad','##ght','an']
+    else:
+        labels = list(string.ascii_lowercase) + [" "]
+    print(labels,model_name)
+    return labels + ["_"]
+
 try:
     import onnxruntime
     def to_numpy(tensor):
@@ -36,7 +44,7 @@ def inference(model,xs):
     log_probs = output
     entropy = -(np.exp(log_probs) * log_probs).sum(-1).mean(-1)
     log_probs = log_probs.argmax(-1)
-    text = decode(log_probs)
+    text = decode(log_probs,get_labels(model._model_path.split("/")[-1]))
     timesteps = [0]
     return text,entropy,timesteps
 
@@ -97,17 +105,22 @@ def get_files(path, extensions=None, recurse=True, folders=None, followlinks=Tru
         res = _get_files(path, f, extensions)
     return L(res)
 
-labels =  list(
-    string.ascii_lowercase  # + string.digits
-) + [" ","_"]
-
-def decode(out,labels=labels):
-    out2 = ["_"]+list(out)
-    collapsed = []
-    for idx,i in enumerate(out): # can run in parallel
-        if i!=out2[idx] and i!=len(labels)-1:
-            collapsed.append(i)
-    return "".join([labels[i] for i in collapsed])
+def decode(out,labels):
+    if any(["##" in i for i in labels]):
+        from collections import OrderedDict
+        special_toks = ['[CLS]', '[SEP]', '[UNK]', '[PAD]', '[MASK]']
+        vocabs = OrderedDict([(idx,i) for idx,i in enumerate(labels[:-1])])
+        tokens = [vocabs.get(i,vocabs[1]) for i in out]
+        tokens = [t for t in tokens if t not in special_toks]
+        out_string = " ".join(tokens).replace(" ##", "").strip()
+        return out_string
+    else:
+        out2 = ["_"]+list(out)
+        collapsed = []
+        for idx,i in enumerate(out): # can run in parallel
+            if i!=out2[idx] and i!=len(labels)-1:
+                collapsed.append(i)
+        return "".join([labels[i] for i in collapsed])
 
 def decodes(output):
     n_jobs = 4
@@ -178,8 +191,10 @@ def load_model(path):
     cache_model[path.stem] = model
     return model
 
-def load_decoder(path):
+def load_lm(path):
     # print("loading language model")
+    labels = get_labels(path)
+
     download_map = {
         "v1":["https://zenodo.org/record/5117101/files/out.trie.zip?download=1"],
         "en":["https://zenodo.org/record/5716345/files/mixed-lower.binary.zip?download=1"]
@@ -214,14 +229,11 @@ def load_decoder(path):
                 continue
             break
 
-    kenlm_model = kenlm.Model(path)
-
     decoder = build_ctcdecoder(
-        labels,
-        kenlm_model, 
+        labels[:-1]+[""],
+        path,
         alpha=0.5,
-        beta=1.0, 
-        ctc_token_idx=labels.index("_")
+        beta=1
     )
     return decoder
 

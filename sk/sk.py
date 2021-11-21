@@ -25,7 +25,6 @@ from scipy.io.wavfile import read
 import io
 import warnings
 from sk.utils import *
-# from utils import load_model,load_decoder
 
 info_path = Path.home()/".sk/info.txt"
 
@@ -68,7 +67,7 @@ def transcribe_file(files,model,decoder=None,logits=False,speaker=False,verbose=
             continue
         if decoder:
             if isinstance(decoder,str):
-                decoder = load_decoder(decoder)
+                decoder = load_lm(decoder)
             text,entropy,tt = inference_lm(model,xs,decoder)
             if speaker:
                 _, cont_embeds, wav_splits = encoder.embed_utterance(preprocess_wav(str(i)), return_partials=True, rate=16)
@@ -99,6 +98,7 @@ def transcribe_bytes(b,model,decoder=None):
         "entropy":entropy,
         "timestamps":tt,
     }
+
 def transcribe_array(array,model,decoder=None):
     array = np.pad(array,(0,268800-array.shape[0]))
     xs = array[None]
@@ -150,7 +150,7 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
         decoder = "v1"
 
     if isinstance(decoder,str):
-        decoder = load_decoder(decoder)
+        decoder = load_lm(decoder)
 
     if isinstance(fn,bytes):
         return transcribe_bytes(fn,model,decoder)
