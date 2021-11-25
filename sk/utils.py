@@ -194,6 +194,8 @@ def load_model(path):
 
 def load_lm(path):
     # print("loading language model")
+    if not isinstance(path,str):
+        return path
     labels = get_labels(path)
 
     download_map = {
@@ -250,7 +252,7 @@ def create_labelling(labels,wav_splits,output):
         if i==len(times)-1:
             temp = [str(labels[i]),start_time,time]
             labelling.append(tuple(temp))
-    speaker = []
+    speaker = {}
     for l in labelling:
         start = l[1]
         end = l[2]
@@ -258,5 +260,8 @@ def create_labelling(labels,wav_splits,output):
         if len(chunks) == 0:
             continue
         else:
-            speaker.append([l[0],chunks])
+            if l[0] not in speaker:
+                speaker[l[0]] = chunks
+            else:
+                speaker[l[0]].extend(chunks)
     return speaker

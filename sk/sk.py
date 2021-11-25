@@ -66,8 +66,6 @@ def transcribe_file(files,model,decoder=None,logits=False,speaker=False,verbose=
             processed_files.append(i)
             continue
         if decoder:
-            if isinstance(decoder,str):
-                decoder = load_lm(decoder)
             text,entropy,tt = inference_lm(model,xs,decoder)
             if speaker:
                 _, cont_embeds, wav_splits = encoder.embed_utterance(preprocess_wav(str(i)), return_partials=True, rate=16)
@@ -86,7 +84,10 @@ def transcribe_file(files,model,decoder=None,logits=False,speaker=False,verbose=
 def transcribe_bytes(b,model,decoder=None):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        _,xs = read(io.BytesIO(b))
+        if not isinstance(b,io.BytesIO):
+            b = io.BytesIO(b)
+        _,xs = read(b)
+
     xs = xs.astype(np.float32)[None]
     if decoder:
         text,entropy,tt = inference_lm(model,xs,decoder)
@@ -94,7 +95,7 @@ def transcribe_bytes(b,model,decoder=None):
         text,entropy,tt = inference(model,xs)
     return {
         "texts":text,
-        "filenames":len(b),
+        "filenames":xs[:16],
         "entropy":entropy,
         "timestamps":tt,
     }
@@ -117,6 +118,9 @@ class SK(object):
     def __init__(self,model="conformer_small",decoder=None):
         self.model = load_model(model)
         self.decoder = load_lm(decoder)
+        print("loaded model:",self.model._model_path,self.model._providers)
+        if decoder:
+            print("loaded lm:",decoder)
     def transcribe_file(self,**kwargs):
         return transcribe_file(model=self.model,decoder=self.decoder,**kwargs)
     def transcribe_bytes(self,b):

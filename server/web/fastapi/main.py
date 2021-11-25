@@ -1,10 +1,11 @@
 from fastapi import FastAPI, File, UploadFile,Body
 from fastapi.middleware.cors import CORSMiddleware
-from sk import predict
+from sk import SK,predict
 import shutil
 from pathlib import Path
 from uuid import uuid4
 import os
+from pdb import set_trace
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
@@ -20,21 +21,16 @@ app.add_middleware(
 async def get_file_size(file: bytes = File(...)):
     return {"file_size": len(file)}
 
-
 saved = Path("files")
 saved.mkdir(exist_ok=True)
+
+asr = SK(decoder="v1")
 
 @app.post("/transcript")
 # async def transcript(file: UploadFile = File(...),name:str=Body(...),label:str=Body(...)):
 async def transcript(file: UploadFile = File(...)):
-    dest = saved/f"{uuid4()}"
-    try:
-        with dest.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    finally:
-        file.file.close()
-    transcript = predict(dest,verbose=False)["texts"][0]
-    return transcript
+    out = asr.transcribe_bytes(file.file._file)
+    return out["timestamps"]
 
 @app.post("/speaker_transcript")
 # async def transcript(file: UploadFile = File(...),name:str=Body(...),label:str=Body(...)):
@@ -45,7 +41,7 @@ async def speaker_transcript(file: UploadFile = File(...)):
             shutil.copyfileobj(file.file, buffer)
     finally:
         file.file.close()
-    transcript = predict(dest,verbose=False,speaker=True,decoder="v1")["texts"][0]
+    transcript = predict(dest,verbose=False,speaker=True,decoder="v1")["speakers"][0]
     return transcript
 
 @app.get("/",response_class=HTMLResponse)
@@ -54,6 +50,6 @@ def read_root():
     html_content = "test"
     return HTMLResponse(content=html_content, status_code=200)
 
-print("warming up prediction")
-print(predict("./test.wav",verbose=False,speaker=True,decoder="v1"))
+# print("warming up prediction")
+# print(predict("./test.wav",verbose=False,speaker=True,decoder="v1"))
 # print(predict("./test.wav",verbose=False))
