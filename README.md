@@ -12,9 +12,12 @@ Without pytorch or tf dependencies
 
 support multiple audio type
 
-Can run from CLI or python import
+Can run from CLI and python import
+
+Currently can use our Malay STT model and English model from Nvidia https://github.com/NVIDIA/NeMo
 
 [Load test report](https://htmlpreview.github.io/?https://github.com/redapesolutions/suara-kami-community/blob/main/loadtest.html)
+
 [Demo](https://huggingface.co/spaces/malay-huggingface/suarakami)
 
 1. Setup
@@ -160,7 +163,7 @@ CER and WER calculated using Jiwer
 | Conformer tiny     | ctc   | 11  | 40   | 0.5     |  18MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
 | Conformer tiny-lm     | ctc   | TODO  | TODO   | TODO     |  18MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
 | Conformer small    | w-ctc | 6.1 | 23.9 | 0.6     |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer small-lm | w-ctc | 0.3 | 14   | -       |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
+| Conformer small-lm | w-ctc | 3 | 14   | -       |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
 | Conformer small    | rnnt  | TODO| TODO | TODO    |        |                                                                          |
 
 * All model trained on Google Colab with limited number of dataset and model size because of Google Colab hardware limitations
