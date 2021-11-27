@@ -137,7 +137,8 @@ def load_model(path):
         "conformer_small": ["https://zenodo.org/record/5115792/files/conformer_small.onnx?download=1","https://f001.backblazeb2.com/file/suarakami/conformer_small.onnx"],
         "conformer_tiny": ["https://f001.backblazeb2.com/file/suarakami/conformer_tiny.onnx"],
         "conformer_medium": ["https://zenodo.org/record/5674714/files/conformer_medium.onnx?download=1","https://f001.backblazeb2.com/file/suarakami/conformer_medium.onnx"],
-        "conformer_small_en": ["https://zenodo.org/record/5716289/files/stt_en_conformer_ctc_small.onnx?download=1"]
+        "conformer_small_en": ["https://zenodo.org/record/5716289/files/stt_en_conformer_ctc_small.onnx?download=1"],
+        "silero_vad": ["https://zenodo.org/record/5723037/files/model.onnx?download=1"]
     }
     if path.stem in cache_model:
         return cache_model[path.stem]

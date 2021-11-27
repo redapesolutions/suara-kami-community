@@ -122,7 +122,7 @@ def transcribe_bytes(b,model,decoder=None):
     }
 
 def transcribe_array(array,model,decoder=None):
-    array = np.pad(array,(0,268800-array.shape[0]))
+    # array = np.pad(array,(0,268800-array.shape[0]))
     xs = array[None]
     if decoder:
         text,entropy,tt = inference_lm(model,xs,decoder)
