@@ -138,7 +138,8 @@ def transcribe_array(array,model,decoder=None):
 class SK(object):
     def __init__(self,model="conformer_small",decoder=None):
         self.model = load_model(model)
-        self.decoder = load_lm(decoder)
+        model_name = self.model._model_path.split("/")[-1]
+        self.decoder = load_lm(decoder,model_name)
         print("loaded model:",self.model._model_path,self.model._providers)
         if decoder:
             print("loaded lm:",decoder)

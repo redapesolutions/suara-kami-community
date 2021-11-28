@@ -10,13 +10,17 @@ import os
 from fastcore.basics import patch,setify
 import numpy as np
 from fastcore.foundation import L
+from pdb import set_trace
+from sk.const import *
 
 def get_labels(model_name):
+    if "en_v5" in model_name:
+        return silero_labels,0
     if "en" in model_name:
-        labels = ['[PAD]','[UNK]','[CLS]','[SEP]','[MASK]',"'",'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','##r','##a','##y','##f','##i','##s','##h','##d','##e','##p','##o','##l','##c','##n','##m','##t','##g','##w','##v','##u','##x','##b','##k','##z','##q','##j','th','the','##er','##nd','##in','##ed','##ou','##at','##en','and','##or','##es','to','of','##on','##is','##ing','##ar','##it','##as','##an','##ll','in','##re','wh','he','##om','be','ha','##le','##ot','##ow','##ic','##ut','it','##ld','that','sh','##ly','was','##gh','##id','##se','on','##ve','##et','##ent','you','##im','##st','##ce','##ith','for','##ir','##ion','as','##ay','his','##al','with','##ur','st','##ter','her','##ver','##ch','re','##ad','##ght','an']
+        labels = nemo_labels,None
     else:
         labels = list(string.ascii_lowercase) + [" "]
-    return labels + ["_"]
+    return labels + ["_"],None
 
 try:
     import onnxruntime
@@ -44,7 +48,9 @@ def inference(model,xs):
     log_probs = output
     entropy = -(np.exp(log_probs) * log_probs).sum(-1).mean(-1)
     log_probs = log_probs.argmax(-1)
-    text = decode(log_probs,get_labels(model._model_path.split("/")[-1]))
+    model_name = model._model_path.split("/")[-1]
+    labels,blank_idx = get_labels(model_name)
+    text = decode(log_probs,labels,blank_idx)
     timesteps = [0]
     return text,entropy,timesteps
 
@@ -105,7 +111,9 @@ def get_files(path, extensions=None, recurse=True, folders=None, followlinks=Tru
         res = _get_files(path, f, extensions)
     return L(res)
 
-def decode(out,labels):
+def decode(out,labels,blank_idx=None):
+    if blank_idx is None:
+        blank_idx = len(labels) - 1
     if any(["##" in i for i in labels]):
         from collections import OrderedDict
         special_toks = ['[CLS]', '[SEP]', '[UNK]', '[PAD]', '[MASK]']
@@ -118,7 +126,7 @@ def decode(out,labels):
         out2 = ["_"]+list(out)
         collapsed = []
         for idx,i in enumerate(out): # can run in parallel
-            if i!=out2[idx] and i!=len(labels)-1:
+            if i!=out2[idx] and i!=blank_idx:
                 collapsed.append(i)
         return "".join([labels[i] for i in collapsed])
 
@@ -137,8 +145,9 @@ def load_model(path):
         "conformer_small": ["https://zenodo.org/record/5115792/files/conformer_small.onnx?download=1","https://f001.backblazeb2.com/file/suarakami/conformer_small.onnx"],
         "conformer_tiny": ["https://f001.backblazeb2.com/file/suarakami/conformer_tiny.onnx"],
         "conformer_medium": ["https://zenodo.org/record/5674714/files/conformer_medium.onnx?download=1","https://f001.backblazeb2.com/file/suarakami/conformer_medium.onnx"],
-        "conformer_small_en": ["https://zenodo.org/record/5716289/files/stt_en_conformer_ctc_small.onnx?download=1"],
-        "silero_vad": ["https://zenodo.org/record/5723037/files/model.onnx?download=1"]
+        "nemo_en": ["https://zenodo.org/record/5716289/files/stt_en_conformer_ctc_small.onnx?download=1"],
+        "silero_vad": ["https://zenodo.org/record/5723037/files/model.onnx?download=1"],
+        "silero_en": ["https://zenodo.org/record/5732460/files/en_v5.onnx?download=1"]
     }
     if path.stem in cache_model:
         return cache_model[path.stem]
@@ -194,11 +203,11 @@ def load_model(path):
     cache_model[path.stem] = model
     return model
 
-def load_lm(path):
+def load_lm(path,model_name):
     # print("loading language model")
     if not isinstance(path,str):
         return path
-    labels = get_labels(path)
+    labels,blank_idx = get_labels(model_name)
 
     download_map = {
         "v1":["https://zenodo.org/record/5117101/files/out.trie.zip?download=1"],
@@ -232,9 +241,12 @@ def load_lm(path):
             except:
                 continue
             break
-
+    if blank_idx == 0:
+        labels[0] = ""
+    else:
+        labels = labels[:-1]+[""]
     decoder = build_ctcdecoder(
-        labels[:-1]+[""],
+        labels,
         path,
         alpha=0.5,
         beta=1
