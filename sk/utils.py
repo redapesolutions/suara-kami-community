@@ -186,8 +186,9 @@ def load_model(path):
         sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
         # Use OpenMP optimizations. Only useful for CPU, has little impact for GPUs.
         sess_options.intra_op_num_threads = multiprocessing.cpu_count()
+        EP_list = ['CUDAExecutionProvider', 'CPUExecutionProvider']
         try:
-            model = onnxruntime.InferenceSession(str(path),sess_options)
+            model = onnxruntime.InferenceSession(str(path),sess_options,providers=EP_list)
         except Exception as e:
             print(e)
             print(f"onnx model corrupted, please remove {path} and rerun the code again")

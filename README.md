@@ -14,7 +14,7 @@ support multiple audio type
 
 Can run from CLI and python import
 
-Currently can use our Malay STT model and English model from Nvidia https://github.com/NVIDIA/NeMo
+Currently can use our Malay STT model and English model(Manglish/Singlish coming soon)
 
 [Load test report](https://htmlpreview.github.io/?https://github.com/redapesolutions/suara-kami-community/blob/main/loadtest.html)
 
@@ -177,6 +177,7 @@ Conformer_small: https://zenodo.org/record/5115792 - onnx + tf saved model
 - [Convert Speech text to Written text form](./tutorials/3.normalize_text.ipynb)
 - [Simple Speech to Text using tf saved model](./tutorials/4.tensorflow_inference.ipynb)
 - [Diarization](./tutorials/5.diarization.ipynb)
+- [Voice Activity Detection](./tutorials/6.Voice_activity_detection_(VAD).ipynb)
 - [Prepare Language Model](https://github.com/huseinzol05/malaya-speech/blob/b44d08a225ce9ea6881527cd66018453feb1ace4/pretrained-model/stt/prepare-lm/README.md#L10)
 
 4. Issue
