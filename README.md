@@ -36,97 +36,20 @@ fixing error(optional)
 -> sudo apt-get install libsndfile1
 ```
 
-2. Usage
+Speech models(ONNX)
+- Malay
+  1. "conformer_tiny"
+  1. "conformer_small"
 
-Using Python
-```
-from sk import predict
-predict(filepath)
-or
-predict(filepath,"conformer_tiny")
-or 
-predict(filepath,decoder="v1")
-```
+- English
+  1. "silero_en"
+  1. "nemo_en"
 
-Using Cli
-```
-Usage: sk FN <flags>
-  optional flags:        --model | --decoder | --output_folder | --output_csv |
-                         --audio_type
+- Manglish
+  1. "conformer_medium"
 
-FN              -> filepath
---model         -> model name or model path
---decoder       -> decoder name or decoder path
---output_folder -> transcribed text target location
---output_csv    -> transcribed text csv location
---audio_type    -> if FN is folder, what type of audio format need to search
-
-For detailed information on this command, run:
-  sk --help
-```
-
-### Inference to one folder or multiple folders
-run code that point to a folder containing wav file
-```
-sk audio_folder_path
-or
-sk audio_folder_path --output_folder output
-or
-sk audio_folder_path --output_folder output --output_csv results.csv
-or 
-sk audio_folder_path,audio_folder_path2
-or
-sk audio_folder --model conformer_tiny
-or
-sk audio_folder --audio_type .wav
-or
-sk audio_folder --audio_type .wav,.mp3 # for supporting other file type
-```
-
-### Inference to one or multiple files
-run code that point to a wav file
-```
-sk audio_path.wav
-or
-sk audio_path.wav,audio_path2.wav
-or similar parameter to folder inference
-```
-
-### Inference to file and folder
-```
-sk audio_path.wav,audio_folder
-or similar to folder inference
-```
-
-### Example
-```
-➜  suara-kami-community git:(main) ✗ sk /content/test-bahasa/wattpad-audio-wattpad-105.wav           
-Can add '--decoder v1' to improve accuracy or prepare your own language model based on README
-Total input path: 1
-Total audio found(.wav): 1
-texts:     ["kejadian ini bukanlah kejadian yang ni"]
-filenames: ['/content/test-bahasa/wattpad-audio-wattpad-105.wav']
-entropy:   [0.09318003]
-timesteps: [[0]]
-```
-```
-➜  suara-kami-community git:(main) ✗ sk /content/test-bahasa/wattpad-audio-wattpad-105.wav --decoder v1
-Total input path: 1
-Total audio found(.wav): 1
-texts:     ["kejadian ini bukanlah kejadian yang ni"]
-filenames: ['/content/test-bahasa/wattpad-audio-wattpad-105.wav']
-entropy:   [[1.0360475778579712, 0.003976397216320038, 1.0852084159851074, 1.1668410301208496, 0.005958860740065575, 1.022503137588501]]
-timestamps: [[["kejadian", 0.01, 0.04], ["ini", 0.04, 0.05], ["bukanlah", 0.06, 1.02], ["kejadian", 1.02, 1.05], ["yang", 1.05, 2.0], ["ni", 2.01, 2.02]]]
-```
-```
-➜  suara-kami-community git:(main) ✗ sk /content/test-bahasa/wattpad-audio-wattpad-105.wav --decoder /content/out.trie.klm 
-Total input path: 1
-Total audio found(.wav): 1
-texts:     ["kejadian ini bukanlah kejadian yang ni"]
-filenames: ["/content/test-bahasa/wattpad-audio-wattpad-105.wav"]
-entropy:   [[1.0360475778579712, 0.003976397216320038, 1.0852084159851074, 1.1668410301208496, 0.005958860740065575, 1.022503137588501]]
-timestamps: [[["kejadian", 0.01, 0.04], ["ini", 0.04, 0.05], ["bukanlah", 0.06, 1.02], ["kejadian", 1.02, 1.05], ["yang", 1.05, 2.0], ["ni", 2.01, 2.02]]]
-```
+- Vad
+  1. "silero_vad"
 
 ### Share data
 ```
@@ -135,6 +58,7 @@ Usage: feedback PATH
 For detailed information on this command, run:
   feedback --help
 ```
+
 ```
 feedback data_to_share # folder structure should be audio and txt file with same name but different ext for example audio.wav and audio.txt in same folder
 feedback data_to_share.zip # same as above
@@ -144,8 +68,8 @@ feedback audio.wav
 GPU Usage
 
 ```
-pip uninstall onnxruntime -y
-pip install onnxruntime-gpu
+pip uninstall onnxruntime onnxruntime-gpu -y
+pip install onnxruntime-gpu --upgrade
 ```
 
 GRPC Server/Client
@@ -156,19 +80,9 @@ Web Example
 
 check [server/web](./server/web) folder
 
-CER and WER calculated using Jiwer
+Websocket/Streaming Example
 
-| name               | loss  | cer | wer  | entropy |  Size  | Summary                                                                  |
-| ------------------ | ----- | --- | ---- | ------- |  ----  | ------------------------------------------------------------------------ |
-| Conformer tiny     | ctc   | 11  | 40   | 0.5     |  18MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer tiny-lm     | ctc   | TODO  | TODO   | TODO     |  18MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer small    | w-ctc | 6.1 | 23.9 | 0.6     |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer small-lm | w-ctc | 3 | 14   | -       |  60MB  | 457422 of audio files with total duration of 620hours 6minutes 51seconds |
-| Conformer small    | rnnt  | TODO| TODO | TODO    |        |                                                                          |
-
-* All model trained on Google Colab with limited number of dataset and model size because of Google Colab hardware limitations
-
-Conformer_small: https://zenodo.org/record/5115792 - onnx + tf saved model
+check [server/websocket](./server/websocket) folder
 
 3. Tutorials
 
@@ -196,7 +110,7 @@ Conformer_small: https://zenodo.org/record/5115792 - onnx + tf saved model
 
     4.5. Want to contribute (Data,Compute power,Annotation,Features)
     - Can contact us at khursani@omesti.com
-     
+
 References:
 
 1. ONNX optimization based on https://mp.weixin.qq.com/s/ZLZ4F2E_wYEMODGWzdhDRg

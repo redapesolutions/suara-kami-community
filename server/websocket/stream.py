@@ -1,6 +1,6 @@
 import subprocess as sp
 import numpy as np
-from sk import SK
+from sk import SK,get_speech_ts_adaptive
 from pdb import set_trace
 CHUNK_SIZE = 4000
 
@@ -8,32 +8,34 @@ def video_frames_ffmpeg(url):
     iterator = 0
     cmd = f'ffmpeg -loglevel quiet -re -i {url} -acodec pcm_f32le -f f32le -vn -sn -dn -ar 16000 -ac 1 -'.split(" ")
     p = sp.Popen(cmd, stdout=sp.PIPE)
+    asr = SK(model="silero_en_large")
     buffer = []
     current_text = ""
+    current_len = 0
+    skip = False
     repeated = 0
-    asr = SK(decoder="v1")
     while True:
-        data = p.stdout.read(CHUNK_SIZE * 40)
+        data = p.stdout.read(CHUNK_SIZE*10)
         data = np.frombuffer(data, dtype=np.float32)
         buffer.append(data)
-        inp = np.array(buffer).flatten()
-        print(inp.shape)
-        out = asr.transcribe_array(inp)
-        # logger.info(out)
-        print(out["texts"])
-        buffer = []
-        # if current_text != out["texts"]:
-        #     current_text = out["texts"]
-        #     print(current_text)
-        # else:
-        #     repeated += 1
-        #     if repeated > 8:
-        #         repeated = 0
-        #         buffer = []
-        #         print("reset")
-        # if len(current_text.split(" ")) > 10:
-        #     print("reset -2")
-        #     buffer = []
+        lala = np.array(buffer).flatten()
+        out = asr.transcribe_array(lala)
+        if current_text != out["texts"]:
+            current_text = out["texts"]
+            print(f"{lala.shape} | {current_text}")
+        if  current_len == len(current_text.split(" ")):
+            repeated += 1
+            if repeated > 8:
+                skip = True
+        if current_len > 14 or skip:
+            buffer = []
+            print(current_text)
+            current_len = 0
+            skip = False
+            repeated = 0
+            # print("reset")
+        else:
+            current_len = len(current_text.split(" "))
         iterator += 1
         if len(data) == 0:
             p.wait()
