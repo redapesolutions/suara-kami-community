@@ -20,7 +20,14 @@ Currently can use our Malay STT model and English model(Manglish/Singlish coming
 
 [Demo](https://huggingface.co/spaces/malay-huggingface/suarakami)
 
-1. Setup
+# Table of Contents
+1. [Setup](#setup)
+1. [Models](#models)
+1. [Share Data](#share-data)
+1. [Tutorials](#tutorials)
+1. [Issue](#issue)
+
+## Setup
 
 ```
 pip install git+https://github.com/redapesolutions/suara-kami-community
@@ -36,6 +43,7 @@ fixing error(optional)
 -> sudo apt-get install libsndfile1
 ```
 
+## Models
 Speech models(ONNX)
 - Malay
   1. "conformer_tiny"
@@ -51,7 +59,14 @@ Speech models(ONNX)
 - Vad
   1. "silero_vad"
 
-### Share data
+Language models
+- Malay
+  1. "v1"
+
+- English
+  1. "en
+
+## Share data
 ```
 Usage: feedback PATH
 
@@ -84,7 +99,7 @@ Websocket/Streaming Example
 
 check [server/websocket](./server/websocket) folder
 
-3. Tutorials
+## Tutorials
 
 - [Simple Speech to Text](./tutorials/1.speech_to_text.ipynb)
 - [Speech to Text w/ Language model](./tutorials/2.speech_to_text_with_language_model.ipynb)
@@ -92,9 +107,10 @@ check [server/websocket](./server/websocket) folder
 - [Simple Speech to Text using tf saved model](./tutorials/4.tensorflow_inference.ipynb)
 - [Diarization](./tutorials/5.diarization.ipynb)
 - [Voice Activity Detection](./tutorials/6.Voice_activity_detection_(VAD).ipynb)
+- [Using CLI](./old_README.md)
 - [Prepare Language Model](https://github.com/huseinzol05/malaya-speech/blob/b44d08a225ce9ea6881527cd66018453feb1ace4/pretrained-model/stt/prepare-lm/README.md#L10)
 
-4. Issue
+## Issue
 
     4.1. The model not able to recognize my name/company/brand
     - The reason why the model not able to recognize because it is not in the training dataset, you can create kenlm language model to make the model recognize it correctly or use Hotword with custom weight to correctly recognize it. See tutorials/2. speech to text with language model.ipynb
