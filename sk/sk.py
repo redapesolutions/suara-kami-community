@@ -169,12 +169,10 @@ def predict(fn,model="conformer_small",decoder=None,output_folder=None,output_cs
             return
 
     asr = SK(model,decoder)
-
     if isinstance(fn,bytes):
         return asr.transcribe_bytes(b=fn)
     if isinstance(fn,np.ndarray):
         return asr.transcribe_array(array=fn)
-    
     out = asr.transcribe_file(fn=fn,audio_type=".wav",logits=logits,speaker=speaker,verbose=verbose)
     preds = out["texts"]
     ents = out["entropy"]

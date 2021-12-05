@@ -28,7 +28,7 @@ def gen(audio_file_name):
 
 
 def run(audio_file_name):
-    channel = grpc.insecure_channel('localhost:5001')
+    channel = grpc.insecure_channel('0.0.0.0:5001')
     stub = stt_service_pb2_grpc.SttServiceStub(channel)
     it = stub.StreamingRecognize(gen(audio_file_name))
 

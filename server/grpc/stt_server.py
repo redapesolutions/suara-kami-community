@@ -15,7 +15,8 @@ from google.protobuf import duration_pb2
 import numpy as np
 
 # sys.path.append(".")
-from sk import predict
+from sk import SK
+asr = SK()
 
 import gc
 gc.set_threshold(0)
@@ -64,7 +65,7 @@ class SttServiceServicer(stt_service_pb2_grpc.SttServiceServicer):
         head = 40
         for request in request_iterator:
             buffer.append(request.audio_content)
-            out = predict(np.array(buffer).flatten().tobytes())
+            out = asr.transcribe_bytes(np.array(buffer).flatten().tobytes())
             text = out["texts"]
             if text:
                 if recent_text == text:
